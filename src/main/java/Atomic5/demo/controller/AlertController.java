@@ -14,13 +14,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/alerts")
 @CrossOrigin(origins = "*")
 public class AlertController {
-    
+
     private final AlertService alertService;
-    
+
     public AlertController(AlertService alertService) {
         this.alertService = alertService;
     }
-    
+
     /**
      * Get all alerts for a specific user
      */
@@ -28,11 +28,11 @@ public class AlertController {
     public ResponseEntity<List<AlertDTO>> getAlertsForUser(@PathVariable Long userId) {
         List<Alert> alerts = alertService.getAlertsForUser(userId);
         List<AlertDTO> alertDTOs = alerts.stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(alertDTOs);
     }
-    
+
     /**
      * Get unread alert count for a user
      */
@@ -41,7 +41,7 @@ public class AlertController {
         long count = alertService.getUnreadAlertCount(userId);
         return ResponseEntity.ok(count);
     }
-    
+
     /**
      * Mark an alert as read
      */
@@ -53,7 +53,7 @@ public class AlertController {
         }
         return ResponseEntity.notFound().build();
     }
-    
+
     /**
      * Dismiss an alert
      */
@@ -65,7 +65,7 @@ public class AlertController {
         }
         return ResponseEntity.notFound().build();
     }
-    
+
     /**
      * Delete an alert
      */
@@ -74,7 +74,7 @@ public class AlertController {
         // Implementation for delete
         return ResponseEntity.noContent().build();
     }
-    
+
     private AlertDTO convertToDTO(Alert alert) {
         AlertDTO dto = new AlertDTO();
         dto.setId(alert.getId());
@@ -86,12 +86,12 @@ public class AlertController {
         dto.setCreatedAt(alert.getCreatedAt() != null ? alert.getCreatedAt().toString() : null);
         dto.setReadAt(alert.getReadAt() != null ? alert.getReadAt().toString() : null);
         dto.setDistanceKm(alert.getDistanceKm());
-        
+
         if (alert.getFloodReport() != null) {
             dto.setAreaName(alert.getFloodReport().getAreaName());
             dto.setFloodSeverity(alert.getFloodReport().getSeverity().name());
         }
-        
+
         return dto;
     }
 }

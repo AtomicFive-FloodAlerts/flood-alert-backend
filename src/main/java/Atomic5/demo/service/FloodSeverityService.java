@@ -9,25 +9,25 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class FloodSeverityService {
-    
+
     /**
      * Calculate severity based on water level (in cm)
      */
     public FloodSeverity calculateSeverityFromWaterLevel(int waterLevel) {
         return FloodSeverity.calculateSeverity(waterLevel);
     }
-    
+
     /**
      * Calculate a severity score (0-100) for frontend visualization
      */
     public int calculateSeverityScore(FloodReport report) {
         int baseScore = 0;
-        
+
         // Score based on water level
         if (report.getWaterLevel() != null) {
             baseScore = Math.min((report.getWaterLevel() / 3) + 10, 100);
         }
-        
+
         // Adjust based on severity level
         switch (report.getSeverity()) {
             case LOW:
@@ -43,10 +43,10 @@ public class FloodSeverityService {
                 baseScore = Math.min(Math.max(baseScore, 85), 100);
                 break;
         }
-        
+
         return baseScore;
     }
-    
+
     /**
      * Get alert radius in km based on severity level
      * Higher severity = larger radius
@@ -59,12 +59,12 @@ public class FloodSeverityService {
             case CRITICAL -> 15.0;
         };
     }
-    
+
     /**
      * Check if a flood report requires immediate action
      */
     public boolean requiresImmediateAction(FloodReport report) {
-        return report.getSeverity() == FloodSeverity.HIGH || 
-               report.getSeverity() == FloodSeverity.CRITICAL;
+        return report.getSeverity() == FloodSeverity.HIGH ||
+                report.getSeverity() == FloodSeverity.CRITICAL;
     }
 }

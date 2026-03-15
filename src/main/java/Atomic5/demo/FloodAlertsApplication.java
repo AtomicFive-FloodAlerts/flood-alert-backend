@@ -12,12 +12,12 @@ public class FloodAlertsApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(FloodAlertsApplication.class, args);
 	}
-	
+
 	@GetMapping("/hello")
 	public String hello() {
 		return "Hello World - Flood Alert System Running";
 	}
-	
+
 	@GetMapping("/health")
 	public String health() {
 		return "Flood Alert Backend is healthy";

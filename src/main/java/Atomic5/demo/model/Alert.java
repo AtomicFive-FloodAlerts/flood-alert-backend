@@ -15,26 +15,26 @@ public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne
     @JoinColumn(name = "flood_report_id")
     private FloodReport floodReport;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User recipient;
-    
+
     private String title;
     private String message;
-    
+
     @Enumerated(EnumType.STRING)
     private AlertStatus status;
-    
+
     private LocalDateTime createdAt;
     private LocalDateTime readAt;
-    
+
     private Double distanceKm; // Distance from user to flood location
-    
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -51,13 +51,13 @@ enum AlertStatus {
     READ("User has seen the alert"),
     DISMISSED("User dismissed the alert"),
     ACKNOWLEDGED("User acknowledged the alert");
-    
+
     private final String description;
-    
+
     AlertStatus(String description) {
         this.description = description;
     }
-    
+
     public String getDescription() {
         return description;
     }

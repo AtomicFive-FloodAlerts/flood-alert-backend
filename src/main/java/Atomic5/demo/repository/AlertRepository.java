@@ -11,9 +11,9 @@ import java.util.List;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, Long> {
-    
+
     List<Alert> findByRecipientOrderByCreatedAtDesc(User recipient);
-    
+
     @Query("SELECT COUNT(a) FROM Alert a WHERE a.recipient = :user AND a.status = 'UNREAD'")
     long countUnreadAlerts(@Param("user") User user);
 }

@@ -15,7 +15,7 @@ public class UserDTO {
     private Double latitude;
     private Double longitude;
     private Boolean notificationsEnabled;
-    
+
     public UserDTO(String name, String email, Double latitude, Double longitude) {
         this.name = name;
         this.email = email;
