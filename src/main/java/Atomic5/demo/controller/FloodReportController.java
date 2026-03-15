@@ -1,7 +1,6 @@
 package Atomic5.demo.controller;
 
 import Atomic5.demo.dto.FloodReportDTO;
-import Atomic5.demo.dto.UserDTO;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.FloodSeverity;
 import Atomic5.demo.model.User;

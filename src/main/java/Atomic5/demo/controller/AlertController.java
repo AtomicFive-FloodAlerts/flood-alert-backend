@@ -3,7 +3,6 @@ package Atomic5.demo.controller;
 import Atomic5.demo.dto.AlertDTO;
 import Atomic5.demo.model.Alert;
 import Atomic5.demo.service.AlertService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
