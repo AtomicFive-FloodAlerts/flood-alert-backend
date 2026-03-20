@@ -12,8 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/floods")
@@ -39,42 +42,44 @@ public class FloodReportController {
      * Report a new flood
      */
     @PostMapping("/report")
-    public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
-        try {
-            // Get the reporting user
-            User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
-            if (reporter == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-            }
-
-            // Create flood report
-            FloodReport report = new FloodReport(
-                    reporter,
-                    reportDTO.getLatitude(),
-                    reportDTO.getLongitude(),
-                    reportDTO.getDescription(),
-                    reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName());
-
-            // Calculate severity based on water level
-            FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel());
-            report.setSeverity(severity);
-
-            // Save the flood report
-            FloodReport savedReport = floodReportRepository.save(report);
-
-            // Generate alerts for nearby users
-            alertService.generateAlertsForFloodReport(savedReport);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Flood report created and alerts generated");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error creating flood report: " + e.getMessage());
+    public ResponseEntity<?> reportFlood(@Valid @RequestBody FloodReportDTO reportDTO) {
+        // Validate user
+        User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
+        if (reporter == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
         }
-    }
+
+        // Validate required fields
+        if (reportDTO.getLatitude() == null || reportDTO.getLongitude() == null ||
+            reportDTO.getWaterLevel() == null || reportDTO.getAreaName() == null) {
+
+            return ResponseEntity.badRequest()
+                    .body("Missing required fields");
+        }
+
+        // Create flood report
+        FloodReport report = new FloodReport(
+                reporter,
+                reportDTO.getLatitude(),
+                reportDTO.getLongitude(),
+                reportDTO.getDescription(),
+                reportDTO.getWaterLevel(),
+                reportDTO.getAreaName());
+
+        // Calculate severity based on water level
+        FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
+                reportDTO.getWaterLevel());
+        report.setSeverity(severity);
+
+        // Save the flood report
+        FloodReport savedReport = floodReportRepository.save(report);
+
+        // Generate alerts for nearby users
+        alertService.generateAlertsForFloodReport(savedReport);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
+}
 
     /**
      * Get all active flood reports
@@ -99,10 +104,16 @@ public class FloodReportController {
         return ResponseEntity.ok(reports);
     }
 
-    @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
-        return floodReportRepository.findById(floodId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+        @GetMapping("/{floodId}")
+        public ResponseEntity<?> getFloodById(@PathVariable Long floodId) {
+
+        Optional<FloodReport> report = floodReportRepository.findById(floodId);
+
+        if (report.isPresent()) {
+                return ResponseEntity.ok(report.get());
+        } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Flood report not found");
+        }
+        } 
 }

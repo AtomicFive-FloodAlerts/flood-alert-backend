@@ -16,21 +16,30 @@ public class FloodReport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User reportedBy;
 
+    @Column(nullable = false)
     private Double latitude;
+
+    @Column(nullable = false)
     private Double longitude;
+
+    @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
     private FloodSeverity severity;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime reportTime;
     private LocalDateTime expiryTime;
 
+    @Column(nullable = false)
     private Integer waterLevel; // in cm
+
+    @Column(nullable = false)
     private String areaName;
 
     public FloodReport(User reportedBy, Double latitude, Double longitude,
@@ -41,7 +50,11 @@ public class FloodReport {
         this.description = description;
         this.waterLevel = waterLevel;
         this.areaName = areaName;
+    }
+
+    @PrePersist
+    protected void onCreate() {
         this.reportTime = LocalDateTime.now();
-        this.expiryTime = LocalDateTime.now().plusHours(6); // Expires after 6 hours
+        this.expiryTime = LocalDateTime.now().plusHours(6); // expires after 6 hours
     }
 }

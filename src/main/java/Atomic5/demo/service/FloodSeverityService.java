@@ -21,31 +21,34 @@ public class FloodSeverityService {
      * Calculate a severity score (0-100) for frontend visualization
      */
     public int calculateSeverityScore(FloodReport report) {
-        int baseScore = 0;
 
-        // Score based on water level
-        if (report.getWaterLevel() != null) {
-            baseScore = Math.min((report.getWaterLevel() / 3) + 10, 100);
+        if (report == null || report.getWaterLevel() == null) {
+            return 0;
         }
 
-        // Adjust based on severity level
-        switch (report.getSeverity()) {
+        int waterLevel = report.getWaterLevel();
+        int baseScore = Math.min((waterLevel / 3) + 10, 100);
+
+        FloodSeverity severity = report.getSeverity();
+
+        if (severity == null) {
+            return baseScore;
+        }
+
+        switch (severity) {
             case LOW:
-                baseScore = Math.min(baseScore, 25);
-                break;
+                return Math.min(baseScore, 25);
             case MODERATE:
-                baseScore = Math.min(Math.max(baseScore, 30), 50);
-                break;
+                return Math.min(Math.max(baseScore, 30), 50);
             case HIGH:
-                baseScore = Math.min(Math.max(baseScore, 60), 85);
-                break;
+                return Math.min(Math.max(baseScore, 60), 85);
             case CRITICAL:
-                baseScore = Math.min(Math.max(baseScore, 85), 100);
-                break;
+                return Math.min(Math.max(baseScore, 85), 100);
+            default:
+                return baseScore;
         }
-
-        return baseScore;
     }
+
 
     /**
      * Get alert radius in km based on severity level
