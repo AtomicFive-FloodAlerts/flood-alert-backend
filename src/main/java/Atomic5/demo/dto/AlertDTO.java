@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AlertDTO {
     private Long id;
-    private Long floodReportId;
+    private String floodReportId;
     private Long recipientId;
     private String title;
     private String message;

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,13 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Alert {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "flood_report_id")
-    private FloodReport floodReport;
+    private String floodReportId;   // MongoDB FloodReport id
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -33,7 +33,7 @@ public class Alert {
     private LocalDateTime createdAt;
     private LocalDateTime readAt;
 
-    private Double distanceKm; // Distance from user to flood location
+    private Double distanceKm;
 
     @PrePersist
     protected void onCreate() {
