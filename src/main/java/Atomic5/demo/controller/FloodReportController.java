@@ -10,6 +10,7 @@ import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +38,10 @@ public class FloodReportController {
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
         try {
-            User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            User reporter = userRepository.findByEmail(email);
+
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("User not found");
@@ -49,10 +53,12 @@ public class FloodReportController {
                     reportDTO.getLongitude(),
                     reportDTO.getDescription(),
                     reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName());
+                    reportDTO.getAreaName()
+            );
 
             FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel());
+                    reportDTO.getWaterLevel()
+            );
             report.setSeverity(severity);
 
             FloodReport savedReport = floodReportRepository.save(report);
