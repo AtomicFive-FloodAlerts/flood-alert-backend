@@ -38,7 +38,9 @@ public class AlertService {
 
         for (User user : allUsers) {
             if (user.getId().equals(floodReport.getReportedByUserId())
-                    || !Boolean.TRUE.equals(user.getNotificationsEnabled())) {
+                    || !Boolean.TRUE.equals(user.getNotificationsEnabled())
+                    || user.getLatitude() == null
+                    || user.getLongitude() == null) {
                 continue;
             }
 
@@ -52,6 +54,11 @@ public class AlertService {
     }
 
     private boolean isUserInAlertRadius(User user, FloodReport flood, double radiusKm) {
+        if (user.getLatitude() == null || user.getLongitude() == null
+                || flood.getLatitude() == null || flood.getLongitude() == null) {
+            return false;
+        }
+
         return LocationUtil.isWithinRadius(
                 user.getLatitude(), user.getLongitude(),
                 flood.getLatitude(), flood.getLongitude(),
