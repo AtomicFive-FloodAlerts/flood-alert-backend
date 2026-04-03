@@ -18,6 +18,7 @@ public class AlertController {
 
     public AlertController(AlertService alertService) {
         this.alertService = alertService;
+        System.out.println("AlertController initialized");
     }
 
     /**
