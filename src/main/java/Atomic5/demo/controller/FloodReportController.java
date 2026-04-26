@@ -8,6 +8,7 @@ import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
+import Atomic5.demo.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,15 +25,18 @@ public class FloodReportController {
     private final UserRepository userRepository;
     private final AlertService alertService;
     private final FloodSeverityService floodSeverityService;
+    private final NotificationService notificationService;
 
     public FloodReportController(FloodReportRepository floodReportRepository,
             UserRepository userRepository,
             AlertService alertService,
-            FloodSeverityService floodSeverityService) {
+            FloodSeverityService floodSeverityService,
+            NotificationService notificationService) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
         this.floodSeverityService = floodSeverityService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -67,6 +71,9 @@ public class FloodReportController {
 
             // Generate alerts for nearby users
             alertService.generateAlertsForFloodReport(savedReport);
+
+            // Send confirmation email to reporter
+            notificationService.sendFloodReportConfirmation(savedReport, reporter);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Flood report created and alerts generated");

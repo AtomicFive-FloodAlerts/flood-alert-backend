@@ -70,8 +70,46 @@ public class AlertController {
      */
     @DeleteMapping("/{alertId}")
     public ResponseEntity<Void> deleteAlert(@PathVariable Long alertId) {
-        // Implementation for delete
-        return ResponseEntity.noContent().build();
+        boolean deleted = alertService.deleteAlert(alertId);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Acknowledge an alert
+     */
+    @PutMapping("/{alertId}/acknowledge")
+    public ResponseEntity<AlertDTO> acknowledgeAlert(@PathVariable Long alertId) {
+        Alert alert = alertService.acknowledgeAlert(alertId);
+        if (alert != null) {
+            return ResponseEntity.ok(convertToDTO(alert));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Get alerts by severity level
+     */
+    @GetMapping("/user/{userId}/severity/{severity}")
+    public ResponseEntity<List<AlertDTO>> getAlertsBySeverity(
+            @PathVariable Long userId,
+            @PathVariable String severity) {
+        List<Alert> alerts = alertService.getAlertsBySeverity(userId, severity);
+        List<AlertDTO> alertDTOs = alerts.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(alertDTOs);
+    }
+
+    /**
+     * Get active alerts (unread or acknowledged)
+     */
+    @GetMapping("/user/{userId}/active")
+    public ResponseEntity<List<AlertDTO>> getActiveAlerts(@PathVariable Long userId) {
+        List<Alert> alerts = alertService.getActiveAlerts(userId);
+        List<AlertDTO> alertDTOs = alerts.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(alertDTOs);
     }
 
     private AlertDTO convertToDTO(Alert alert) {
