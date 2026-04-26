@@ -14,9 +14,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service to generate and manage alerts for flood events
- */
 @Service
 public class AlertService {
 
@@ -24,36 +21,31 @@ public class AlertService {
     private final UserRepository userRepository;
     private final FloodSeverityService floodSeverityService;
 
-    public AlertService(AlertRepository alertRepository, UserRepository userRepository,
-            FloodSeverityService floodSeverityService) {
+    public AlertService(AlertRepository alertRepository,
+                        UserRepository userRepository,
+                        FloodSeverityService floodSeverityService) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
         this.floodSeverityService = floodSeverityService;
     }
 
-    /**
-     * Generate alerts for all nearby users based on flood report
-     */
     @Transactional
     public List<Alert> generateAlertsForFloodReport(FloodReport floodReport) {
         List<Alert> generatedAlerts = new ArrayList<>();
 
-        // Get alert radius based on flood severity
         double alertRadiusKm = floodSeverityService.getAlertRadiusKm(floodReport.getSeverity());
-
-        // Get all active users
         List<User> allUsers = userRepository.findAll();
 
         for (User user : allUsers) {
-            // Skip if user is the reporter or disabled notifications
-            if (user.getId().equals(floodReport.getReportedBy().getId()) ||
-                    !user.getNotificationsEnabled()) {
+            if (user.getId().equals(floodReport.getReportedByUserId())
+                    || !Boolean.TRUE.equals(user.getNotificationsEnabled())
+                    || user.getLatitude() == null
+                    || user.getLongitude() == null) {
                 continue;
             }
 
-            // Check if user is within alert radius
             if (isUserInAlertRadius(user, floodReport, alertRadiusKm)) {
-                Alert alert = createAlert(user, floodReport, alertRadiusKm);
+                Alert alert = createAlert(user, floodReport);
                 generatedAlerts.add(alertRepository.save(alert));
             }
         }
@@ -61,23 +53,22 @@ public class AlertService {
         return generatedAlerts;
     }
 
-    /**
-     * Check if a user is within the alert radius of a flood
-     */
     private boolean isUserInAlertRadius(User user, FloodReport flood, double radiusKm) {
+        if (user.getLatitude() == null || user.getLongitude() == null
+                || flood.getLatitude() == null || flood.getLongitude() == null) {
+            return false;
+        }
+
         return LocationUtil.isWithinRadius(
                 user.getLatitude(), user.getLongitude(),
                 flood.getLatitude(), flood.getLongitude(),
                 radiusKm);
     }
 
-    /**
-     * Create an alert object for a user based on flood report
-     */
-    private Alert createAlert(User user, FloodReport floodReport, double radiusKm) {
+    private Alert createAlert(User user, FloodReport floodReport) {
         Alert alert = new Alert();
         alert.setRecipient(user);
-        alert.setFloodReport(floodReport);
+        alert.setFloodReportId(floodReport.getId());
         alert.setStatus(AlertStatus.UNREAD);
 
         double distanceKm = LocationUtil.calculateDistance(
@@ -85,7 +76,6 @@ public class AlertService {
                 floodReport.getLatitude(), floodReport.getLongitude());
         alert.setDistanceKm(distanceKm);
 
-        // Generate alert message
         String title = "Flood Alert - " + floodReport.getSeverity().name();
         String message = String.format(
                 "⚠️ %s reported near %s at distance %.1f km. %s",
@@ -100,9 +90,6 @@ public class AlertService {
         return alert;
     }
 
-    /**
-     * Get all alerts for a user
-     */
     public List<Alert> getAlertsForUser(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
@@ -111,9 +98,6 @@ public class AlertService {
         return alertRepository.findByRecipientOrderByCreatedAtDesc(user);
     }
 
-    /**
-     * Get unread alert count for a user
-     */
     public long getUnreadAlertCount(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
@@ -122,9 +106,6 @@ public class AlertService {
         return alertRepository.countUnreadAlerts(user);
     }
 
-    /**
-     * Mark alert as read
-     */
     @Transactional
     public Alert markAsRead(Long alertId) {
         Alert alert = alertRepository.findById(alertId).orElse(null);
@@ -136,9 +117,6 @@ public class AlertService {
         return alert;
     }
 
-    /**
-     * Dismiss alert
-     */
     @Transactional
     public Alert dismissAlert(Long alertId) {
         Alert alert = alertRepository.findById(alertId).orElse(null);
