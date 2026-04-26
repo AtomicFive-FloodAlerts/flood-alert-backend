@@ -3,6 +3,7 @@ package Atomic5.demo.service;
 import Atomic5.demo.model.Alert;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.User;
+import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.service.sms.SmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -30,6 +31,9 @@ public class NotificationService {
 
     @Autowired(required = false)
     private SmsService smsService;
+
+    @Autowired
+    private FloodReportRepository floodReportRepository;
 
     /**
      * Send alert notification via email and SMS
@@ -93,7 +97,7 @@ public class NotificationService {
      * Build HTML email content for alert
      */
     private String buildHtmlEmailContent(Alert alert) {
-        FloodReport report = alert.getFloodReport();
+        FloodReport report = resolveFloodReport(alert);
         if (report == null) {
             return alert.getMessage();
         }
@@ -190,7 +194,7 @@ public class NotificationService {
      * Build SMS alert message
      */
     private String buildSmsAlertMessage(Alert alert) {
-        FloodReport report = alert.getFloodReport();
+        FloodReport report = resolveFloodReport(alert);
         if (report == null) {
             return alert.getMessage();
         }
@@ -202,6 +206,16 @@ public class NotificationService {
                 alert.getDistanceKm(),
                 report.getWaterLevel(),
                 "Stay safe!");
+    }
+
+    private FloodReport resolveFloodReport(Alert alert) {
+        if (alert.getFloodReport() != null) {
+            return alert.getFloodReport();
+        }
+        if (alert.getFloodReportId() == null) {
+            return null;
+        }
+        return floodReportRepository.findById(alert.getFloodReportId()).orElse(null);
     }
 
     /**
