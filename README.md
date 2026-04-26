@@ -1,5 +1,7 @@
  Flood Alerts backend
  
- To start run this Command
+ To start run this File 
+
+ Previous Command is currently not working due to changes
  
- .\mvnw.cmd spring-boot:run
+FloodAlertsApplication.java
