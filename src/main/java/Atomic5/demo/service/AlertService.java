@@ -9,6 +9,8 @@ import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.util.LocationUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,16 +19,21 @@ import java.util.List;
 @Service
 public class AlertService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AlertService.class);
+
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
     private final FloodSeverityService floodSeverityService;
+    private final NotificationService notificationService;
 
     public AlertService(AlertRepository alertRepository,
                         UserRepository userRepository,
-                        FloodSeverityService floodSeverityService) {
+                        FloodSeverityService floodSeverityService,
+                        NotificationService notificationService) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
         this.floodSeverityService = floodSeverityService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -46,10 +53,18 @@ public class AlertService {
 
             if (isUserInAlertRadius(user, floodReport, alertRadiusKm)) {
                 Alert alert = createAlert(user, floodReport);
-                generatedAlerts.add(alertRepository.save(alert));
+                Alert savedAlert = alertRepository.save(alert);
+                generatedAlerts.add(savedAlert);
+
+                try {
+                    notificationService.sendAlertNotification(savedAlert, user);
+                } catch (Exception e) {
+                    logger.warn("Failed to send notification for alert {}: {}", savedAlert.getId(), e.getMessage());
+                }
             }
         }
 
+        logger.info("Generated {} alerts for flood report {}", generatedAlerts.size(), floodReport.getId());
         return generatedAlerts;
     }
 
@@ -125,5 +140,57 @@ public class AlertService {
             return alertRepository.save(alert);
         }
         return alert;
+    }
+
+    @Transactional
+    public Alert acknowledgeAlert(Long alertId) {
+        Alert alert = alertRepository.findById(alertId).orElse(null);
+        if (alert != null) {
+            alert.setStatus(AlertStatus.ACKNOWLEDGED);
+            alert.setReadAt(LocalDateTime.now());
+            return alertRepository.save(alert);
+        }
+        return alert;
+    }
+
+    @Transactional
+    public boolean deleteAlert(Long alertId) {
+        try {
+            if (!alertRepository.existsById(alertId)) {
+                return false;
+            }
+            alertRepository.deleteById(alertId);
+            logger.info("Alert {} deleted successfully", alertId);
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to delete alert {}: {}", alertId, e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Alert> getAlertsBySeverity(Long userId, String severity) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        List<Alert> allAlerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        return allAlerts.stream()
+                .filter(alert -> alert.getFloodReport() != null
+                        && alert.getFloodReport().getSeverity().name().equalsIgnoreCase(severity))
+                .toList();
+    }
+
+    public List<Alert> getActiveAlerts(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        List<Alert> allAlerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        return allAlerts.stream()
+                .filter(alert -> alert.getStatus() == AlertStatus.UNREAD
+                        || alert.getStatus() == AlertStatus.ACKNOWLEDGED)
+                .toList();
     }
 }
