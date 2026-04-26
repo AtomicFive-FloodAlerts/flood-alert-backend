@@ -5,6 +5,7 @@ import Atomic5.demo.model.AlertStatus;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.User;
 import Atomic5.demo.repository.AlertRepository;
+import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.util.LocationUtil;
 import org.springframework.stereotype.Service;
@@ -22,15 +23,18 @@ public class AlertService {
     private static final Logger logger = LoggerFactory.getLogger(AlertService.class);
 
     private final AlertRepository alertRepository;
+    private final FloodReportRepository floodReportRepository;
     private final UserRepository userRepository;
     private final FloodSeverityService floodSeverityService;
     private final NotificationService notificationService;
 
     public AlertService(AlertRepository alertRepository,
+                        FloodReportRepository floodReportRepository,
                         UserRepository userRepository,
                         FloodSeverityService floodSeverityService,
                         NotificationService notificationService) {
         this.alertRepository = alertRepository;
+        this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.floodSeverityService = floodSeverityService;
         this.notificationService = notificationService;
@@ -54,6 +58,7 @@ public class AlertService {
             if (isUserInAlertRadius(user, floodReport, alertRadiusKm)) {
                 Alert alert = createAlert(user, floodReport);
                 Alert savedAlert = alertRepository.save(alert);
+                savedAlert.setFloodReport(floodReport);
                 generatedAlerts.add(savedAlert);
 
                 try {
@@ -110,7 +115,9 @@ public class AlertService {
         if (user == null) {
             return new ArrayList<>();
         }
-        return alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        List<Alert> alerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        attachFloodReports(alerts);
+        return alerts;
     }
 
     public long getUnreadAlertCount(Long userId) {
@@ -175,6 +182,7 @@ public class AlertService {
         }
 
         List<Alert> allAlerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        attachFloodReports(allAlerts);
         return allAlerts.stream()
                 .filter(alert -> alert.getFloodReport() != null
                         && alert.getFloodReport().getSeverity().name().equalsIgnoreCase(severity))
@@ -188,9 +196,20 @@ public class AlertService {
         }
 
         List<Alert> allAlerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
+        attachFloodReports(allAlerts);
         return allAlerts.stream()
                 .filter(alert -> alert.getStatus() == AlertStatus.UNREAD
                         || alert.getStatus() == AlertStatus.ACKNOWLEDGED)
                 .toList();
+    }
+
+    private void attachFloodReports(List<Alert> alerts) {
+        for (Alert alert : alerts) {
+            if (alert.getFloodReport() != null || alert.getFloodReportId() == null) {
+                continue;
+            }
+            floodReportRepository.findById(alert.getFloodReportId())
+                    .ifPresent(alert::setFloodReport);
+        }
     }
 }

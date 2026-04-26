@@ -28,6 +28,9 @@ public class Alert {
     private LocalDateTime readAt;
     private Double distanceKm;
 
+    @Transient
+    private FloodReport floodReport;
+
     public Alert() {
     }
 
@@ -125,5 +128,13 @@ public class Alert {
 
     public void setDistanceKm(Double distanceKm) {
         this.distanceKm = distanceKm;
+    }
+
+    public FloodReport getFloodReport() {
+        return floodReport;
+    }
+
+    public void setFloodReport(FloodReport floodReport) {
+        this.floodReport = floodReport;
     }
 }
