@@ -11,9 +11,9 @@ import Atomic5.demo.service.FloodSeverityService;
 import Atomic5.demo.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -39,37 +39,34 @@ public class FloodReportController {
         this.notificationService = notificationService;
     }
 
-    /**
-     * Report a new flood
-     */
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
         try {
-            // Get the reporting user
-            User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            User reporter = userRepository.findByEmail(email);
+
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
 
-            // Create flood report
             FloodReport report = new FloodReport(
-                    reporter,
+                    reporter.getId(),
                     reportDTO.getLatitude(),
                     reportDTO.getLongitude(),
                     reportDTO.getDescription(),
                     reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName());
+                    reportDTO.getAreaName()
+            );
 
-            // Calculate severity based on water level
             FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel());
+                    reportDTO.getWaterLevel()
+            );
             report.setSeverity(severity);
 
-            // Save the flood report
             FloodReport savedReport = floodReportRepository.save(report);
 
-            // Generate alerts for nearby users
             alertService.generateAlertsForFloodReport(savedReport);
 
             // Send confirmation email to reporter
@@ -83,31 +80,22 @@ public class FloodReportController {
         }
     }
 
-    /**
-     * Get all active flood reports
-     */
     @GetMapping("/active")
     public ResponseEntity<List<FloodReport>> getActiveFloods() {
-        List<FloodReport> activeReports = floodReportRepository.findActiveReports(LocalDateTime.now());
-        return ResponseEntity.ok(activeReports);
+        return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
-    /**
-     * Get flood reports in a specific area (bounding box)
-     */
     @GetMapping("/area")
     public ResponseEntity<List<FloodReport>> getFloodsInArea(
             @RequestParam Double minLat,
             @RequestParam Double maxLat,
             @RequestParam Double minLon,
             @RequestParam Double maxLon) {
-        List<FloodReport> reports = floodReportRepository.findReportsInArea(
-                minLat, maxLat, minLon, maxLon, LocalDateTime.now());
-        return ResponseEntity.ok(reports);
+        return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
     @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

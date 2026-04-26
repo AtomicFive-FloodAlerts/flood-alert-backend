@@ -11,10 +11,13 @@ public class FloodAlertsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FloodAlertsApplication.class, args);
+		System.out.println("Starting Flood Alert System Backend...");
+		System.out.println("Flood Alert System Backend is running on port 8080...");
+		
 	}
 
-	@GetMapping("/hello")
-	public String hello() {
+	@GetMapping("")
+	public String Welcome() {
 		return "Hello World - Flood Alert System Running";
 	}
 
@@ -22,4 +25,5 @@ public class FloodAlertsApplication {
 	public String health() {
 		return "Flood Alert Backend is healthy";
 	}
+
 }
