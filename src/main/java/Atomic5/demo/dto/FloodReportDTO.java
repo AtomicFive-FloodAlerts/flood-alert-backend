@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FloodReportDTO {
-
+    
     private Long reportedById;
     private Double latitude;
     private Double longitude;

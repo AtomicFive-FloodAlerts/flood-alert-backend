@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.Map;
+import java.util.HashMap;
+
 @RestController
 @RequestMapping("/api/floods")
 @CrossOrigin(origins = "*")
@@ -115,5 +118,34 @@ public class FloodReportController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Flood report not found");
         }
+        }
+
+        @GetMapping("/map")
+        public ResponseEntity<List<Map<String, Object>>> getMapData() {
+
+        List<FloodReport> reports = floodReportRepository.findAll();
+
+        List<Map<String, Object>> result = reports.stream().map(report -> {
+                Map<String, Object> data = new HashMap<>();
+
+                data.put("id", report.getId());
+                data.put("name", report.getAreaName());
+                data.put("description", report.getDescription());
+                data.put("latitude", report.getLatitude());
+                data.put("longitude", report.getLongitude());
+
+                // 🔥 IMPORTANT → matches your map colors
+                if (report.getSeverity() == FloodSeverity.HIGH) {
+                data.put("priority", "HIGH");
+                } else if (report.getSeverity() == FloodSeverity.MEDIUM) {
+                data.put("priority", "MEDIUM");
+                } else {
+                data.put("priority", "LOW");
+                }
+
+                return data;
+        }).toList();
+
+        return ResponseEntity.ok(result);
         } 
 }
