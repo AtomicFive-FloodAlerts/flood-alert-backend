@@ -135,14 +135,13 @@ public class FloodReportController {
                 data.put("longitude", report.getLongitude());
 
 
-                if (report.getSeverity() == FloodSeverity.HIGH) {
-                data.put("priority", "HIGH");
+                if (report.getSeverity() == FloodSeverity.HIGH || report.getSeverity() == FloodSeverity.CRITICAL) {
+                                data.put("priority", "HIGH");
                 } else if (report.getSeverity() == FloodSeverity.MODERATE) {
-                data.put("priority", "MEDIUM");
+                        data.put("priority", "MEDIUM");
                 } else {
-                data.put("priority", "LOW");
+                        data.put("priority", "LOW");
                 }
-
                 return data;
         }).toList();
 
