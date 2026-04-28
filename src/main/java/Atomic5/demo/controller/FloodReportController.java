@@ -134,10 +134,10 @@ public class FloodReportController {
                 data.put("latitude", report.getLatitude());
                 data.put("longitude", report.getLongitude());
 
-                // 🔥 IMPORTANT → matches your map colors
+
                 if (report.getSeverity() == FloodSeverity.HIGH) {
                 data.put("priority", "HIGH");
-                } else if (report.getSeverity() == FloodSeverity.MEDIUM) {
+                } else if (report.getSeverity() == FloodSeverity.MODERATE) {
                 data.put("priority", "MEDIUM");
                 } else {
                 data.put("priority", "LOW");
