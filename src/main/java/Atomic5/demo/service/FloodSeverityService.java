@@ -13,8 +13,19 @@ public class FloodSeverityService {
     /**
      * Calculate severity based on water level (in cm)
      */
-    public FloodSeverity calculateSeverityFromWaterLevel(int waterLevel) {
-        return FloodSeverity.calculateSeverity(waterLevel);
+    public FloodSeverity calculateSeverityFromWaterLevel(Double waterLevel) {
+
+        if (waterLevel == null) return FloodSeverity.LOW;
+
+        if (waterLevel < 50) {
+            return FloodSeverity.LOW;
+        } else if (waterLevel < 100) {
+            return FloodSeverity.MODERATE;
+        } else if (waterLevel < 200) {
+            return FloodSeverity.HIGH;
+        } else {
+            return FloodSeverity.CRITICAL;
+        }
     }
 
     /**
@@ -23,12 +34,10 @@ public class FloodSeverityService {
     public int calculateSeverityScore(FloodReport report) {
         int baseScore = 0;
 
-        // Score based on water level
         if (report.getWaterLevel() != null) {
-            baseScore = Math.min((report.getWaterLevel() / 3) + 10, 100);
+            baseScore = Math.min((int)(report.getWaterLevel() / 3) + 10, 100);
         }
 
-        // Adjust based on severity level
         switch (report.getSeverity()) {
             case LOW:
                 baseScore = Math.min(baseScore, 25);
@@ -49,15 +58,20 @@ public class FloodSeverityService {
 
     /**
      * Get alert radius in km based on severity level
-     * Higher severity = larger radius
      */
     public double getAlertRadiusKm(FloodSeverity severity) {
-        return switch (severity) {
-            case LOW -> 2.0;
-            case MODERATE -> 5.0;
-            case HIGH -> 10.0;
-            case CRITICAL -> 15.0;
-        };
+        switch (severity) {
+            case LOW:
+                return 2.0;
+            case MODERATE:
+                return 5.0;
+            case HIGH:
+                return 10.0;
+            case CRITICAL:
+                return 15.0;
+            default:
+                return 2.0;
+        }
     }
 
     /**
@@ -65,6 +79,6 @@ public class FloodSeverityService {
      */
     public boolean requiresImmediateAction(FloodReport report) {
         return report.getSeverity() == FloodSeverity.HIGH ||
-                report.getSeverity() == FloodSeverity.CRITICAL;
+               report.getSeverity() == FloodSeverity.CRITICAL;
     }
 }

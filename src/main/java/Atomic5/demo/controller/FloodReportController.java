@@ -26,9 +26,9 @@ public class FloodReportController {
     private final FloodSeverityService floodSeverityService;
 
     public FloodReportController(FloodReportRepository floodReportRepository,
-            UserRepository userRepository,
-            AlertService alertService,
-            FloodSeverityService floodSeverityService) {
+                                 UserRepository userRepository,
+                                 AlertService alertService,
+                                 FloodSeverityService floodSeverityService) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
@@ -40,9 +40,17 @@ public class FloodReportController {
      */
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
+
+        // Validate input first (VERY IMPORTANT)
+        if (reportDTO.getReportedById() == null) {
+            return ResponseEntity.badRequest().body("reportedById is required");
+        }
+
         try {
-            // Get the reporting user
-            User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
+            // Find user safely
+            User reporter = userRepository.findById(reportDTO.getReportedById())
+                    .orElse(null);
+
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("User not found");
@@ -55,21 +63,26 @@ public class FloodReportController {
                     reportDTO.getLongitude(),
                     reportDTO.getDescription(),
                     reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName());
+                    reportDTO.getAreaName()
+            );
 
-            // Calculate severity based on water level
-            FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel());
+            // Calculate severity
+            FloodSeverity severity =
+                    floodSeverityService.calculateSeverityFromWaterLevel(
+                            reportDTO.getWaterLevel()
+                    );
+
             report.setSeverity(severity);
 
-            // Save the flood report
+            // Save
             FloodReport savedReport = floodReportRepository.save(report);
 
-            // Generate alerts for nearby users
+            // Generate alerts
             alertService.generateAlertsForFloodReport(savedReport);
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Flood report created and alerts generated");
+                    .body(savedReport); // 🔥 return object (better than string)
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error creating flood report: " + e.getMessage());
@@ -81,12 +94,14 @@ public class FloodReportController {
      */
     @GetMapping("/active")
     public ResponseEntity<List<FloodReport>> getActiveFloods() {
-        List<FloodReport> activeReports = floodReportRepository.findActiveReports(LocalDateTime.now());
+        List<FloodReport> activeReports =
+                floodReportRepository.findActiveReports(LocalDateTime.now());
+
         return ResponseEntity.ok(activeReports);
     }
 
     /**
-     * Get flood reports in a specific area (bounding box)
+     * Get flood reports in a specific area
      */
     @GetMapping("/area")
     public ResponseEntity<List<FloodReport>> getFloodsInArea(
@@ -94,11 +109,18 @@ public class FloodReportController {
             @RequestParam Double maxLat,
             @RequestParam Double minLon,
             @RequestParam Double maxLon) {
-        List<FloodReport> reports = floodReportRepository.findReportsInArea(
-                minLat, maxLat, minLon, maxLon, LocalDateTime.now());
+
+        List<FloodReport> reports =
+                floodReportRepository.findReportsInArea(
+                        minLat, maxLat, minLon, maxLon, LocalDateTime.now()
+                );
+
         return ResponseEntity.ok(reports);
     }
 
+    /**
+     * Get flood by ID
+     */
     @GetMapping("/{floodId}")
     public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
         return floodReportRepository.findById(floodId)

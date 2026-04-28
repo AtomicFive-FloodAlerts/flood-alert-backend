@@ -1,17 +1,12 @@
 package Atomic5.demo.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "flood_reports")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class FloodReport {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,11 +25,14 @@ public class FloodReport {
     private LocalDateTime reportTime;
     private LocalDateTime expiryTime;
 
-    private Integer waterLevel; // in cm
+    private Double waterLevel; 
     private String areaName;
 
+    public FloodReport() {}
+
     public FloodReport(User reportedBy, Double latitude, Double longitude,
-            String description, Integer waterLevel, String areaName) {
+                       String description, Double waterLevel, String areaName) {
+
         this.reportedBy = reportedBy;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -42,6 +40,56 @@ public class FloodReport {
         this.waterLevel = waterLevel;
         this.areaName = areaName;
         this.reportTime = LocalDateTime.now();
-        this.expiryTime = LocalDateTime.now().plusHours(6); // Expires after 6 hours
+        this.expiryTime = LocalDateTime.now().plusHours(6);
+    }
+
+    // ===== GETTERS & SETTERS =====
+
+    public Long getId() {
+        return id;
+    }
+
+    public User getReportedBy() {
+        return reportedBy;
+    }
+
+    public void setReportedBy(User reportedBy) {
+        this.reportedBy = reportedBy;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Double getWaterLevel() {
+        return waterLevel;
+    }
+
+    public String getAreaName() {
+        return areaName;
+    }
+
+    public FloodSeverity getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(FloodSeverity severity) {
+        this.severity = severity;
+    }
+
+    public LocalDateTime getReportTime() {
+        return reportTime;
+    }
+
+    public LocalDateTime getExpiryTime() {
+        return expiryTime;
     }
 }
