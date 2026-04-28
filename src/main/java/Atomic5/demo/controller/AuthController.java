@@ -2,25 +2,26 @@ package Atomic5.demo.controller;
 
 import Atomic5.demo.dto.AuthRequest;
 import Atomic5.demo.dto.AuthResponse;
-import Atomic5.demo.model.User;
 import Atomic5.demo.service.AuthService;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
     private AuthService service;
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        return service.register(user);
+    public String register(@RequestBody Atomic5.demo.model.User user) {
+        return service.register(user); 
     }
-
+    
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
-        return service.login(request);
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        return ResponseEntity.ok(service.login(request));
     }
 }
