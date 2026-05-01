@@ -12,23 +12,21 @@ public class User {
 
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
 
     private String phoneNumber;
-
     private Double latitude;
     private Double longitude;
 
     @Column(nullable = false)
     private Boolean notificationsEnabled = true;
 
-    //Default constructor (required by JPA)
+    // Default constructor
     public User() {}
 
-    //FIX: Custom constructor (this was missing)
     public User(String name, String email, Double latitude, Double longitude) {
         this.name = name;
         this.email = email;
@@ -37,7 +35,7 @@ public class User {
         this.notificationsEnabled = true;
     }
 
-    //GETTERS & SETTERS
+    // Getters & Setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

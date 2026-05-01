@@ -1,46 +1,57 @@
 package Atomic5.demo.controller;
 
-import Atomic5.demo.dto.AuthRequest;
 import Atomic5.demo.dto.AuthResponse;
+import Atomic5.demo.dto.LoginRequest;
+import Atomic5.demo.dto.RegisterRequest;
 import Atomic5.demo.model.User;
 import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.security.JwtUtil;
 import Atomic5.demo.service.AuthService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
-    @Autowired
-    private AuthService service;
+    private final AuthService authService;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private UserRepository userRepository;
+    public AuthController(AuthService authService,
+                          UserRepository userRepository,
+                          JwtUtil jwtUtil) {
+        this.authService = authService;
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    // REGISTER
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        return service.register(user);
-    }
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        String result = authService.register(request);
 
-    // LOGIN (email/password)
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        try {
-            return ResponseEntity.ok(service.login(request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
+        if ("Email already registered".equals(result)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
+
+        return ResponseEntity.ok(result);
     }
 
-    // GOOGLE LOGIN (VERY IMPORTANT)
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/oauth-success")
     public AuthResponse googleLogin(
             org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken auth) {
@@ -53,7 +64,7 @@ public class AuthController {
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setName(name);
-                    newUser.setPassword(""); // no password for Google users
+                    newUser.setPassword("");
                     return userRepository.save(newUser);
                 });
 

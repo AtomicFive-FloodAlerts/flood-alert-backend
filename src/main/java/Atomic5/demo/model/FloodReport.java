@@ -1,39 +1,32 @@
 package Atomic5.demo.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "flood_reports")
+@Document(collection = "flood_reports")
 public class FloodReport {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User reportedBy;
-
+    private Long reportedById;
     private Double latitude;
     private Double longitude;
     private String description;
-
-    @Enumerated(EnumType.STRING)
     private FloodSeverity severity;
-
     private LocalDateTime reportTime;
     private LocalDateTime expiryTime;
-
-    private Double waterLevel; 
+    private Double waterLevel;
     private String areaName;
 
-    public FloodReport() {}
+    public FloodReport() {
+    }
 
-    public FloodReport(User reportedBy, Double latitude, Double longitude,
+    public FloodReport(Long reportedById, Double latitude, Double longitude,
                        String description, Double waterLevel, String areaName) {
-
-        this.reportedBy = reportedBy;
+        this.reportedById = reportedById;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
@@ -43,53 +36,33 @@ public class FloodReport {
         this.expiryTime = LocalDateTime.now().plusHours(6);
     }
 
-    // ===== GETTERS & SETTERS =====
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getReportedById() { return reportedById; }
+    public void setReportedById(Long reportedById) { this.reportedById = reportedById; }
 
-    public User getReportedBy() {
-        return reportedBy;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public void setReportedBy(User reportedBy) {
-        this.reportedBy = reportedBy;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public Double getLatitude() {
-        return latitude;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public Double getLongitude() {
-        return longitude;
-    }
+    public FloodSeverity getSeverity() { return severity; }
+    public void setSeverity(FloodSeverity severity) { this.severity = severity; }
 
-    public String getDescription() {
-        return description;
-    }
+    public LocalDateTime getReportTime() { return reportTime; }
+    public void setReportTime(LocalDateTime reportTime) { this.reportTime = reportTime; }
 
-    public Double getWaterLevel() {
-        return waterLevel;
-    }
+    public LocalDateTime getExpiryTime() { return expiryTime; }
+    public void setExpiryTime(LocalDateTime expiryTime) { this.expiryTime = expiryTime; }
 
-    public String getAreaName() {
-        return areaName;
-    }
+    public Double getWaterLevel() { return waterLevel; }
+    public void setWaterLevel(Double waterLevel) { this.waterLevel = waterLevel; }
 
-    public FloodSeverity getSeverity() {
-        return severity;
-    }
-
-    public void setSeverity(FloodSeverity severity) {
-        this.severity = severity;
-    }
-
-    public LocalDateTime getReportTime() {
-        return reportTime;
-    }
-
-    public LocalDateTime getExpiryTime() {
-        return expiryTime;
-    }
+    public String getAreaName() { return areaName; }
+    public void setAreaName(String areaName) { this.areaName = areaName; }
 }

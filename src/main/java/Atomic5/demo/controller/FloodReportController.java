@@ -8,11 +8,13 @@ import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
+import Atomic5.demo.service.NotificationService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -24,64 +26,52 @@ public class FloodReportController {
     private final UserRepository userRepository;
     private final AlertService alertService;
     private final FloodSeverityService floodSeverityService;
+    private final NotificationService notificationService;
 
     public FloodReportController(FloodReportRepository floodReportRepository,
                                  UserRepository userRepository,
                                  AlertService alertService,
-                                 FloodSeverityService floodSeverityService) {
+                                 FloodSeverityService floodSeverityService,
+                                 NotificationService notificationService) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
         this.floodSeverityService = floodSeverityService;
+        this.notificationService = notificationService;
     }
 
-    /**
-     * Report a new flood
-     */
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
 
-        // Validate input first (VERY IMPORTANT)
-        if (reportDTO.getReportedById() == null) {
-            return ResponseEntity.badRequest().body("reportedById is required");
-        }
-
         try {
-            // Find user safely
-            User reporter = userRepository.findById(reportDTO.getReportedById())
-                    .orElse(null);
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            User reporter = userRepository.findByEmail(email).orElse(null);
 
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
 
-            // Create flood report
-            FloodReport report = new FloodReport(
-                    reporter,
-                    reportDTO.getLatitude(),
-                    reportDTO.getLongitude(),
-                    reportDTO.getDescription(),
-                    reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName()
-            );
+            FloodReport report = new FloodReport();
+            report.setReportedById(reporter.getId());
+            report.setLatitude(reportDTO.getLatitude());
+            report.setLongitude(reportDTO.getLongitude());
+            report.setDescription(reportDTO.getDescription());
+            report.setWaterLevel(reportDTO.getWaterLevel().doubleValue());
+            report.setAreaName(reportDTO.getAreaName());
 
-            // Calculate severity
             FloodSeverity severity =
                     floodSeverityService.calculateSeverityFromWaterLevel(
-                            reportDTO.getWaterLevel()
-                    );
-
+                            reportDTO.getWaterLevel().doubleValue()
+                        );
             report.setSeverity(severity);
 
-            // Save
             FloodReport savedReport = floodReportRepository.save(report);
 
-            // Generate alerts
             alertService.generateAlertsForFloodReport(savedReport);
+            notificationService.sendFloodReportConfirmation(savedReport, reporter);
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(savedReport); // 🔥 return object (better than string)
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -89,20 +79,11 @@ public class FloodReportController {
         }
     }
 
-    /**
-     * Get all active flood reports
-     */
     @GetMapping("/active")
     public ResponseEntity<List<FloodReport>> getActiveFloods() {
-        List<FloodReport> activeReports =
-                floodReportRepository.findActiveReports(LocalDateTime.now());
-
-        return ResponseEntity.ok(activeReports);
+        return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
-    /**
-     * Get flood reports in a specific area
-     */
     @GetMapping("/area")
     public ResponseEntity<List<FloodReport>> getFloodsInArea(
             @RequestParam Double minLat,
@@ -110,19 +91,11 @@ public class FloodReportController {
             @RequestParam Double minLon,
             @RequestParam Double maxLon) {
 
-        List<FloodReport> reports =
-                floodReportRepository.findReportsInArea(
-                        minLat, maxLat, minLon, maxLon, LocalDateTime.now()
-                );
-
-        return ResponseEntity.ok(reports);
+        return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
-    /**
-     * Get flood by ID
-     */
     @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
