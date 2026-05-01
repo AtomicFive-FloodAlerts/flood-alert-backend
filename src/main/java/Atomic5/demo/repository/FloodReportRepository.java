@@ -31,7 +31,8 @@ public interface FloodReportRepository extends MongoRepository<FloodReport, Stri
             LocalDateTime now
     );
 
-    List<FloodReport> findByReportedByUserIdOrderByReportTimeDesc(Long userId);
+    // ✅ FIXED LINE
+    List<FloodReport> findByReportedByIdOrderByReportTimeDesc(Long userId);
 
     List<FloodReport> findByExpiryTimeAfterAndSeverityInOrderByReportTimeDesc(
             LocalDateTime now,

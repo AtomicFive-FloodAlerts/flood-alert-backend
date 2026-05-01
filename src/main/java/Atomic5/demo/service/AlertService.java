@@ -48,7 +48,7 @@ public class AlertService {
         List<User> allUsers = userRepository.findAll();
 
         for (User user : allUsers) {
-            if (user.getId().equals(floodReport.getReportedByUserId())
+            if (user.getId().equals(floodReport.getReportedById())
                     || !Boolean.TRUE.equals(user.getNotificationsEnabled())
                     || user.getLatitude() == null
                     || user.getLongitude() == null) {

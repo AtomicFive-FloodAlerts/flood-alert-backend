@@ -15,29 +15,17 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private String password;
+
     private String phoneNumber;
     private Double latitude;
     private Double longitude;
-    private Boolean notificationsEnabled;
 
     @Column(nullable = false)
-    private String passwordHash;
+    private Boolean notificationsEnabled = true;
 
-    public User() {
-    }
-
-    public User(Long id, String name, String email, String phoneNumber,
-                Double latitude, Double longitude, Boolean notificationsEnabled,
-                String passwordHash) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.notificationsEnabled = notificationsEnabled;
-        this.passwordHash = passwordHash;
-    }
+    // Default constructor
+    public User() {}
 
     public User(String name, String email, Double latitude, Double longitude) {
         this.name = name;
@@ -47,67 +35,31 @@ public class User {
         this.notificationsEnabled = true;
     }
 
-    public Long getId() {
-        return id;
-    }
+    // Getters & Setters
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public Boolean getNotificationsEnabled() {
-        return notificationsEnabled;
-    }
-
+    public Boolean getNotificationsEnabled() { return notificationsEnabled; }
     public void setNotificationsEnabled(Boolean notificationsEnabled) {
         this.notificationsEnabled = notificationsEnabled;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 }

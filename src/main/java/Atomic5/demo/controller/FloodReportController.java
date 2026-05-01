@@ -9,6 +9,7 @@ import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
 import Atomic5.demo.service.NotificationService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,10 +29,10 @@ public class FloodReportController {
     private final NotificationService notificationService;
 
     public FloodReportController(FloodReportRepository floodReportRepository,
-            UserRepository userRepository,
-            AlertService alertService,
-            FloodSeverityService floodSeverityService,
-            NotificationService notificationService) {
+                                 UserRepository userRepository,
+                                 AlertService alertService,
+                                 FloodSeverityService floodSeverityService,
+                                 NotificationService notificationService) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
@@ -41,39 +42,37 @@ public class FloodReportController {
 
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
+
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            User reporter = userRepository.findByEmail(email);
+            User reporter = userRepository.findByEmail(email).orElse(null);
 
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
 
-            FloodReport report = new FloodReport(
-                    reporter.getId(),
-                    reportDTO.getLatitude(),
-                    reportDTO.getLongitude(),
-                    reportDTO.getDescription(),
-                    reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName()
-            );
+            FloodReport report = new FloodReport();
+            report.setReportedById(reporter.getId());
+            report.setLatitude(reportDTO.getLatitude());
+            report.setLongitude(reportDTO.getLongitude());
+            report.setDescription(reportDTO.getDescription());
+            report.setWaterLevel(reportDTO.getWaterLevel().doubleValue());
+            report.setAreaName(reportDTO.getAreaName());
 
-            FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel()
-            );
+            FloodSeverity severity =
+                    floodSeverityService.calculateSeverityFromWaterLevel(
+                            reportDTO.getWaterLevel().doubleValue()
+                        );
             report.setSeverity(severity);
 
             FloodReport savedReport = floodReportRepository.save(report);
 
             alertService.generateAlertsForFloodReport(savedReport);
-
-            // Send confirmation email to reporter
             notificationService.sendFloodReportConfirmation(savedReport, reporter);
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Flood report created and alerts generated");
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error creating flood report: " + e.getMessage());
@@ -91,6 +90,7 @@ public class FloodReportController {
             @RequestParam Double maxLat,
             @RequestParam Double minLon,
             @RequestParam Double maxLon) {
+
         return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
