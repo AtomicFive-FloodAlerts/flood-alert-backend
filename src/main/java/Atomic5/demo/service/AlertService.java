@@ -1,5 +1,14 @@
 package Atomic5.demo.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import Atomic5.demo.model.Alert;
 import Atomic5.demo.model.AlertStatus;
 import Atomic5.demo.model.FloodReport;
@@ -8,14 +17,6 @@ import Atomic5.demo.repository.AlertRepository;
 import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.util.LocationUtil;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class AlertService {
@@ -48,7 +49,7 @@ public class AlertService {
         List<User> allUsers = userRepository.findAll();
 
         for (User user : allUsers) {
-            if (user.getId().equals(floodReport.getReportedByUserId())
+            if (user.getId().equals(floodReport.getReportedById())
                     || !Boolean.TRUE.equals(user.getNotificationsEnabled())
                     || user.getLatitude() == null
                     || user.getLongitude() == null) {
@@ -208,7 +209,7 @@ public class AlertService {
             if (alert.getFloodReport() != null || alert.getFloodReportId() == null) {
                 continue;
             }
-            Long floodId = Long.parseLong(alert.getFloodReportId());
+            String floodId = alert.getFloodReportId();
 
             floodReportRepository.findById(floodId)
                     .ifPresent(alert::setFloodReport);

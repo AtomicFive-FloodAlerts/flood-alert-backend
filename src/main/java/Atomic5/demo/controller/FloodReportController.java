@@ -1,5 +1,20 @@
 package Atomic5.demo.controller;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import Atomic5.demo.dto.FloodReportDTO;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.FloodSeverity;
@@ -9,15 +24,6 @@ import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
 import Atomic5.demo.service.NotificationService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import java.util.Map;
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/floods")
@@ -31,10 +37,10 @@ public class FloodReportController {
     private final NotificationService notificationService;
 
     public FloodReportController(FloodReportRepository floodReportRepository,
-            UserRepository userRepository,
-            AlertService alertService,
-            FloodSeverityService floodSeverityService,
-            NotificationService notificationService) {
+                                 UserRepository userRepository,
+                                 AlertService alertService,
+                                 FloodSeverityService floodSeverityService,
+                                 NotificationService notificationService) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
@@ -43,108 +49,98 @@ public class FloodReportController {
     }
 
     @PostMapping("/report")
-        public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
+    public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
         try {
+            User reporter = userRepository
+                    .findById(reportDTO.getReportedById())
+                    .orElse(null);
 
-                // Validate required fields
-                if (reportDTO.getLatitude() == null ||
-                reportDTO.getLongitude() == null ||
-                reportDTO.getWaterLevel() == null ||
-                reportDTO.getAreaName() == null) {
+            if (reporter == null) {
+                return ResponseEntity.badRequest().body("Invalid user");
+            }
 
-                return ResponseEntity.badRequest()
-                        .body("Missing required fields");
-                }
+            FloodReport report = new FloodReport();
 
-                // Get logged-in user
-                String email = SecurityContextHolder.getContext().getAuthentication().getName();
-                User reporter = userRepository.findByEmail(email);
+            Double latitude = reportDTO.getLatitude();
+            Double longitude = reportDTO.getLongitude();
 
-                if (reporter == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-                }
+            report.setReportedById(reporter.getId());
+            report.setLatitude(latitude);
+            report.setLongitude(longitude);
+            report.setDescription(reportDTO.getDescription());
+            report.setWaterLevel(reportDTO.getWaterLevel().doubleValue());
+            report.setAreaName(reportDTO.getAreaName());
 
-                // Create report
-                FloodReport report = new FloodReport(
-                        reporter.getId(),
-                        reportDTO.getLatitude(),
-                        reportDTO.getLongitude(),
-                        reportDTO.getDescription(),
-                        reportDTO.getWaterLevel(),
-                        reportDTO.getAreaName()
-                );
+            report.setReportTime(LocalDateTime.now());
+            report.setExpiryTime(LocalDateTime.now().plusHours(6));
 
-                // Calculate severity
-                FloodSeverity severity = floodSeverityService
-                        .calculateSeverityFromWaterLevel(reportDTO.getWaterLevel());
-                report.setSeverity(severity);
+            FloodSeverity severity =
+                    floodSeverityService.calculateSeverityFromWaterLevel(
+                            reportDTO.getWaterLevel().doubleValue()
+                    );
 
-                // Save report
-                FloodReport savedReport = floodReportRepository.save(report);
+            report.setSeverity(severity);
 
-                // Generate alerts
-                alertService.generateAlertsForFloodReport(savedReport);
+            FloodReport savedReport = floodReportRepository.save(report);
 
-                // Send notification
-                notificationService.sendFloodReportConfirmation(savedReport, reporter);
+            alertService.generateAlertsForFloodReport(savedReport);
+            notificationService.sendFloodReportConfirmation(savedReport, reporter);
 
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(savedReport);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
 
         } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Error creating flood report: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error creating flood report: " + e.getMessage());
         }
-        }
-        @GetMapping("/active")
-        public ResponseEntity<List<FloodReport>> getActiveFloods() {
-                return ResponseEntity.ok(floodReportRepository.findAll());
-        }
+    }
 
-        @GetMapping("/area")
-        public ResponseEntity<List<FloodReport>> getFloodsInArea(
-                @RequestParam Double minLat,
-                @RequestParam Double maxLat,
-                @RequestParam Double minLon,
-                @RequestParam Double maxLon) {
-                return ResponseEntity.ok(floodReportRepository.findAll());
-        }
+    @GetMapping("/active")
+    public ResponseEntity<List<FloodReport>> getActiveFloods() {
+        return ResponseEntity.ok(floodReportRepository.findAll());
+    }
 
-        @GetMapping("/{floodId}")
-        public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
+    @GetMapping("/{floodId}")
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-        }
+    }
 
-        @GetMapping("/map")
-        public ResponseEntity<List<Map<String, Object>>> getMapData() {
+    @GetMapping("/map")
+    public ResponseEntity<List<Map<String, Object>>> getMapData() {
 
         List<FloodReport> reports = floodReportRepository.findAll();
 
         List<Map<String, Object>> result = reports.stream().map(report -> {
-                Map<String, Object> data = new HashMap<>();
+            Map<String, Object> data = new HashMap<>();
 
-                data.put("id", report.getId());
-                data.put("name", report.getAreaName());
-                data.put("description", report.getDescription());
-                data.put("latitude", report.getLatitude());
-                data.put("longitude", report.getLongitude());
+            data.put("id", report.getId());
+            data.put("name", report.getAreaName());
+            data.put("description", report.getDescription());
+            data.put("latitude", report.getLatitude());
+            data.put("longitude", report.getLongitude());
 
-                FloodSeverity severity = report.getSeverity();
+            FloodSeverity severity = report.getSeverity();
 
-                if (severity == FloodSeverity.HIGH || severity == FloodSeverity.CRITICAL) {
-                data.put("priority", "HIGH");
-                } else if (severity == FloodSeverity.MODERATE) {
-                data.put("priority", "MEDIUM");
-                } else {
-                data.put("priority", "LOW");
-                }
+            switch (severity) {
+                case HIGH:
+                case CRITICAL:
+                    data.put("priority", "HIGH");
+                    break;
 
-                return data;
+                case MODERATE:
+                    data.put("priority", "MEDIUM");
+                    break;
+
+                case LOW:
+                default:
+                    data.put("priority", "LOW");
+                    break;
+            }
+
+            return data;
         }).toList();
 
         return ResponseEntity.ok(result);
-        }
+    }
 }

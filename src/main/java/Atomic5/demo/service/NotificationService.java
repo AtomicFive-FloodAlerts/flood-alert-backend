@@ -1,19 +1,20 @@
 package Atomic5.demo.service;
 
-import Atomic5.demo.model.Alert;
-import Atomic5.demo.model.FloodReport;
-import Atomic5.demo.model.User;
-import Atomic5.demo.repository.FloodReportRepository;
-import Atomic5.demo.service.sms.SmsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import Atomic5.demo.model.Alert;
+import Atomic5.demo.model.FloodReport;
+import Atomic5.demo.model.User;
+import Atomic5.demo.repository.FloodReportRepository;
+import Atomic5.demo.service.sms.SmsService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Service for sending notifications to users via email and SMS
@@ -215,12 +216,9 @@ public class NotificationService {
         if (alert.getFloodReportId() == null) {
             return null;
         }
-        try {
-            Long floodId = Long.parseLong(alert.getFloodReportId());
-            return floodReportRepository.findById(floodId).orElse(null);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        String floodId = alert.getFloodReportId();
+
+        return floodReportRepository.findById(floodId).orElse(null);
     }
 
     /**

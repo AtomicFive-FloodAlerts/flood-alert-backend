@@ -1,126 +1,87 @@
 package Atomic5.demo.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 @Entity
+@Table(name = "flood_report")
 public class FloodReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long reportedByUserId;
+    @Column(name = "reported_by_user_id", nullable = false)
+    private Long reportedById;
 
-    @Column(nullable = false)
     private Double latitude;
-
-    @Column(nullable = false)
     private Double longitude;
-
-    @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
     private FloodSeverity severity;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "report_time")
     private LocalDateTime reportTime;
 
+    @Column(name = "expiry_time")
     private LocalDateTime expiryTime;
 
-    @Column(nullable = false)
-    private Integer waterLevel;
+    @Column(name = "water_level")
+    private Double waterLevel;
 
-    @Column(nullable = false)
+    @Column(name = "area_name")
     private String areaName;
 
-    public FloodReport() {}
+    public FloodReport() {
+    }
 
-    public FloodReport(Long reportedByUserId, Double latitude, Double longitude,
-                       String description, Integer waterLevel, String areaName) {
-        this.reportedByUserId = reportedByUserId;
+    public FloodReport(Long reportedById, Double latitude, Double longitude,
+                       String description, Double waterLevel, String areaName) {
+        this.reportedById = reportedById;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
         this.waterLevel = waterLevel;
         this.areaName = areaName;
-    }
-
-    @PrePersist
-    protected void onCreate() {
         this.reportTime = LocalDateTime.now();
         this.expiryTime = LocalDateTime.now().plusHours(6);
     }
 
-    // GETTERS & SETTERS
+    public Long getId() { return id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getReportedById() { return reportedById; }
+    public void setReportedById(Long reportedById) { this.reportedById = reportedById; }
 
-    public Long getReportedByUserId() {
-        return reportedByUserId;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public void setReportedByUserId(Long reportedByUserId) {
-        this.reportedByUserId = reportedByUserId;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public Double getLatitude() {
-        return latitude;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
+    public FloodSeverity getSeverity() { return severity; }
+    public void setSeverity(FloodSeverity severity) { this.severity = severity; }
 
-    public Double getLongitude() {
-        return longitude;
-    }
+    public LocalDateTime getReportTime() { return reportTime; }
+    public void setReportTime(LocalDateTime reportTime) { this.reportTime = reportTime; }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
+    public LocalDateTime getExpiryTime() { return expiryTime; }
+    public void setExpiryTime(LocalDateTime expiryTime) { this.expiryTime = expiryTime; }
 
-    public String getDescription() {
-        return description;
-    }
+    public Double getWaterLevel() { return waterLevel; }
+    public void setWaterLevel(Double waterLevel) { this.waterLevel = waterLevel; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public FloodSeverity getSeverity() {
-        return severity;
-    }
-
-    public void setSeverity(FloodSeverity severity) {
-        this.severity = severity;
-    }
-
-    public LocalDateTime getReportTime() {
-        return reportTime;
-    }
-
-    public LocalDateTime getExpiryTime() {
-        return expiryTime;
-    }
-
-    public Integer getWaterLevel() {
-        return waterLevel;
-    }
-
-    public void setWaterLevel(Integer waterLevel) {
-        this.waterLevel = waterLevel;
-    }
-
-    public String getAreaName() {
-        return areaName;
-    }
-
-    public void setAreaName(String areaName) {
-        this.areaName = areaName;
-    }
+    public String getAreaName() { return areaName; }
+    public void setAreaName(String areaName) { this.areaName = areaName; }
 }

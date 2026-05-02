@@ -1,15 +1,16 @@
 package Atomic5.demo.repository;
 
-import Atomic5.demo.model.FloodReport;
-import Atomic5.demo.model.FloodSeverity;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import Atomic5.demo.model.FloodReport;
+import Atomic5.demo.model.FloodSeverity;
+
 @Repository
-public interface FloodReportRepository extends MongoRepository<FloodReport, Long> {
+public interface FloodReportRepository extends JpaRepository<FloodReport, String> {
 
     List<FloodReport> findByExpiryTimeAfterOrderByReportTimeDesc(LocalDateTime now);
 
@@ -31,7 +32,7 @@ public interface FloodReportRepository extends MongoRepository<FloodReport, Long
             LocalDateTime now
     );
 
-    List<FloodReport> findByReportedByUserIdOrderByReportTimeDesc(Long userId);
+    List<FloodReport> findByReportedByIdOrderByReportTimeDesc(Long userId);
 
     List<FloodReport> findByExpiryTimeAfterAndSeverityInOrderByReportTimeDesc(
             LocalDateTime now,

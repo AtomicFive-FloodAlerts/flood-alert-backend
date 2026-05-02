@@ -18,6 +18,7 @@ public class DataLoader {
                 user.setName("Test User");
                 user.setEmail("test@gmail.com");
                 user.setPhoneNumber("0771234567");
+                user.setPassword("123456");
                 user.setLatitude(6.9271);
                 user.setLongitude(79.8612);
                 user.setNotificationsEnabled(true);
