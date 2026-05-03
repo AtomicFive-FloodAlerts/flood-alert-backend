@@ -141,12 +141,10 @@ public class Alert {
     }
 
     public Object getFloodReport() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getFloodReport'");
     }
 
     public void setFloodReportId(Long id2) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setFloodReportId'");
     }
 }

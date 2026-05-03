@@ -9,18 +9,19 @@ import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
 import Atomic5.demo.service.NotificationService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/floods")
 @CrossOrigin(origins = "*")
 public class FloodReportController {
-
     private final FloodReportRepository floodReportRepository;
     private final UserRepository userRepository;
     private final AlertService alertService;
@@ -42,7 +43,18 @@ public class FloodReportController {
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            SecurityContext context = SecurityContextHolder.getContext();
+            Authentication authentication = context.getAuthentication();
+
+            String email = null;
+            if (authentication != null && authentication.isAuthenticated()) {
+                email = authentication.getName();
+            }
+
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("User not authenticated");
+            }
 
             User reporter = userRepository.findByEmail(email);
 
@@ -51,18 +63,16 @@ public class FloodReportController {
                         .body("User not found");
             }
 
-            FloodReport report = new FloodReport(
-                    reporter.getId(),
-                    reportDTO.getLatitude(),
-                    reportDTO.getLongitude(),
-                    reportDTO.getDescription(),
-                    reportDTO.getWaterLevel(),
-                    reportDTO.getAreaName()
-            );
+            FloodReport report = new FloodReport();
+            report.setReportedBy(reporter);
+            report.setAreaName(reportDTO.getAreaName());
+            report.setLatitude(reportDTO.getLatitude());
+            report.setLongitude(reportDTO.getLongitude());
+            report.setWaterLevel(reportDTO.getWaterLevel());
+            report.setDescription(reportDTO.getDescription());
 
             FloodSeverity severity = floodSeverityService.calculateSeverityFromWaterLevel(
-                    reportDTO.getWaterLevel()
-            );
+                    reportDTO.getWaterLevel());
             report.setSeverity(severity);
 
             FloodReport savedReport = floodReportRepository.save(report);
@@ -95,7 +105,7 @@ public class FloodReportController {
     }
 
     @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

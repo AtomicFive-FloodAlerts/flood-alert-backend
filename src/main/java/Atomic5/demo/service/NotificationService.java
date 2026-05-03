@@ -101,7 +101,8 @@ public class NotificationService {
         if (alert.getFloodReportId() == null || floodReportRepository == null) {
             return alert.getMessage();
         }
-        Optional<FloodReport> reportOpt = floodReportRepository.findById(alert.getFloodReportId());
+        Optional<FloodReport> reportOpt = (Optional<FloodReport>) floodReportRepository
+                .findById(alert.getFloodReportId());
         if (reportOpt.isEmpty()) {
             return alert.getMessage();
         }
@@ -202,7 +203,8 @@ public class NotificationService {
         if (alert.getFloodReportId() == null || floodReportRepository == null) {
             return alert.getMessage();
         }
-        Optional<FloodReport> reportOpt = floodReportRepository.findById(alert.getFloodReportId());
+        Optional<FloodReport> reportOpt = (Optional<FloodReport>) floodReportRepository
+                .findById(alert.getFloodReportId());
         if (reportOpt.isEmpty()) {
             return alert.getMessage();
         }
