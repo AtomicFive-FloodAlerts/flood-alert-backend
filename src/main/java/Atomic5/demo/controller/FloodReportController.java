@@ -1,5 +1,21 @@
 package Atomic5.demo.controller;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import Atomic5.demo.dto.FloodReportDTO;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.FloodSeverity;
@@ -9,13 +25,6 @@ import Atomic5.demo.repository.UserRepository;
 import Atomic5.demo.service.AlertService;
 import Atomic5.demo.service.FloodSeverityService;
 import Atomic5.demo.service.NotificationService;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/floods")
@@ -28,11 +37,13 @@ public class FloodReportController {
     private final FloodSeverityService floodSeverityService;
     private final NotificationService notificationService;
 
-    public FloodReportController(FloodReportRepository floodReportRepository,
-                                 UserRepository userRepository,
-                                 AlertService alertService,
-                                 FloodSeverityService floodSeverityService,
-                                 NotificationService notificationService) {
+    public FloodReportController(
+        FloodReportRepository floodReportRepository,
+        UserRepository userRepository,
+        AlertService alertService,
+        FloodSeverityService floodSeverityService,
+        NotificationService notificationService
+    ) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
@@ -44,26 +55,34 @@ public class FloodReportController {
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
 
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            User reporter = userRepository.findByEmail(email).orElse(null);
+            User reporter = userRepository
+                    .findById(reportDTO.getReportedById())
+                    .orElse(null);
 
             if (reporter == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
+                return ResponseEntity.badRequest().body("Invalid user");
             }
 
             FloodReport report = new FloodReport();
+
+            Double latitude = reportDTO.getLatitude();
+            Double longitude = reportDTO.getLongitude();
+
             report.setReportedById(reporter.getId());
-            report.setLatitude(reportDTO.getLatitude());
-            report.setLongitude(reportDTO.getLongitude());
+            report.setLatitude(latitude);
+            report.setLongitude(longitude);
             report.setDescription(reportDTO.getDescription());
             report.setWaterLevel(reportDTO.getWaterLevel().doubleValue());
             report.setAreaName(reportDTO.getAreaName());
 
+            report.setReportTime(LocalDateTime.now());
+            report.setExpiryTime(LocalDateTime.now().plusHours(6));
+
             FloodSeverity severity =
                     floodSeverityService.calculateSeverityFromWaterLevel(
                             reportDTO.getWaterLevel().doubleValue()
-                        );
+                    );
+
             report.setSeverity(severity);
 
             FloodReport savedReport = floodReportRepository.save(report);
@@ -95,9 +114,49 @@ public class FloodReportController {
     }
 
     @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/map")
+    public ResponseEntity<List<Map<String, Object>>> getMapData() {
+
+        List<FloodReport> reports = floodReportRepository.findAll();
+
+        List<Map<String, Object>> result = reports.stream().map(report -> {
+            Map<String, Object> data = new HashMap<>();
+
+            data.put("id", report.getId());
+            data.put("name", report.getAreaName());
+            data.put("description", report.getDescription());
+            data.put("latitude", report.getLatitude());
+            data.put("longitude", report.getLongitude());
+
+            FloodSeverity severity = report.getSeverity();
+
+            if (severity == null) {
+                data.put("priority", "LOW");
+            } else {
+                switch (severity) {
+                    case HIGH:
+                    case CRITICAL:
+                        data.put("priority", "HIGH");
+                        break;
+                    case MODERATE:
+                        data.put("priority", "MEDIUM");
+                        break;
+                    case LOW:
+                    default:
+                        data.put("priority", "LOW");
+                        break;
+                }
+            }
+
+            return data;
+        }).toList();
+
+        return ResponseEntity.ok(result);
     }
 }

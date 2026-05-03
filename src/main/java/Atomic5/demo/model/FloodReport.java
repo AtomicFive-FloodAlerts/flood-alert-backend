@@ -1,24 +1,44 @@
 package Atomic5.demo.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.time.LocalDateTime;
 
-@Document(collection = "flood_reports")
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "flood_report")
 public class FloodReport {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(name = "reported_by_user_id", nullable = false)
     private Long reportedById;
+
     private Double latitude;
     private Double longitude;
     private String description;
+
+    @Enumerated(EnumType.STRING)
     private FloodSeverity severity;
+
+    @Column(name = "report_time")
     private LocalDateTime reportTime;
+
+    @Column(name = "expiry_time")
     private LocalDateTime expiryTime;
+
+    @Column(name = "water_level")
     private Double waterLevel;
+
+    @Column(name = "area_name")
     private String areaName;
 
     public FloodReport() {
@@ -36,8 +56,7 @@ public class FloodReport {
         this.expiryTime = LocalDateTime.now().plusHours(6);
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public Long getId() { return id; }
 
     public Long getReportedById() { return reportedById; }
     public void setReportedById(Long reportedById) { this.reportedById = reportedById; }
