@@ -1,6 +1,8 @@
 package Atomic5.demo.model;
 
 import jakarta.persistence.*;
+
+import java.lang.constant.Constable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,7 +13,7 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String floodReportId;
+    private Constable floodReportId;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -75,10 +77,10 @@ public class Alert {
     }
 
     public String getFloodReportId() {
-        return floodReportId;
+        return (String) floodReportId;
     }
 
-    public void setFloodReportId(String floodReportId) {
+    public void setFloodReportId1(Long floodReportId) {
         this.floodReportId = floodReportId;
     }
 
@@ -137,5 +139,14 @@ public class Alert {
     public void setDistanceKm(Double distanceKm) {
         this.distanceKm = distanceKm;
     }
-}
 
+    public Object getFloodReport() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFloodReport'");
+    }
+
+    public void setFloodReportId(Long id2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setFloodReportId'");
+    }
+}

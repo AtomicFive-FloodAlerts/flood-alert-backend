@@ -8,11 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import Atomic5.demo.dto.MapDTO;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import org.springframework.web.bind.annotation.RequestParam;
-
 
 @RestController
 @RequestMapping("/api/maps")
@@ -20,39 +16,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MapController {
         @GetMapping()
         public ResponseEntity<List<MapDTO>> getMapSpots() {
-        List<MapDTO> spots = List.of(
-                new MapDTO(
-                        1L,
-                        "Colombo Fort",
-                        "Severe flooding near Colombo Fort",
-                        6.9271,
-                        79.8612,
-                        "HIGH"
-                ),
-                new MapDTO(
-                        2L,
-                        "Pettah",
-                        "Water rising in Pettah area",
-                        6.9100,
-                        79.8700,
-                        "MEDIUM"
-                ),
-                new MapDTO(
-                        3L,
-                        "Galle Face",
-                        "Minor flooding reported at Galle Face",
-                        6.568545,
-                        80.826024,
-                        "MEDIUM"
-                )
-        );
+                List<MapDTO> spots = List.of(
+                                new MapDTO(
+                                                1L,
+                                                "Colombo Fort",
+                                                "Severe flooding near Colombo Fort",
+                                                6.9271,
+                                                79.8612,
+                                                "HIGH"),
+                                new MapDTO(
+                                                2L,
+                                                "Pettah",
+                                                "Water rising in Pettah area",
+                                                6.9100,
+                                                79.8700,
+                                                "MEDIUM"),
+                                new MapDTO(
+                                                3L,
+                                                "Galle Face",
+                                                "Minor flooding reported at Galle Face",
+                                                6.568545,
+                                                80.826024,
+                                                "MEDIUM"));
 
-        return ResponseEntity.ok(spots);
+                return ResponseEntity.ok(spots);
         }
-      @GetMapping("map:stat")
-      public String getMethodName() {
-          return new String("Map statistics: 3 flood spots reported");
-      }
-      
+
+        @GetMapping("map:stat")
+        public String getMethodName() {
+                return new String("Map statistics: 3 flood spots reported");
+        }
 
 }

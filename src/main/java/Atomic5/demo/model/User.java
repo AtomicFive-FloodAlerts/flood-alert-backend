@@ -34,7 +34,8 @@ public class User {
         this.notificationsEnabled = true;
     }
 
-    public User(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude, Boolean notificationsEnabled, String passwordHash) {
+    public User(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude,
+            Boolean notificationsEnabled, String passwordHash) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -110,4 +111,3 @@ public class User {
         this.passwordHash = passwordHash;
     }
 }
-

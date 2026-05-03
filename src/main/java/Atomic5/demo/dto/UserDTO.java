@@ -19,7 +19,8 @@ public class UserDTO {
         this.longitude = longitude;
     }
 
-    public UserDTO(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude, Boolean notificationsEnabled) {
+    public UserDTO(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude,
+            Boolean notificationsEnabled) {
         this.id = id;
         this.name = name;
         this.email = email;

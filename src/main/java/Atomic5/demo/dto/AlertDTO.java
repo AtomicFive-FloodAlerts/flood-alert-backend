@@ -120,4 +120,3 @@ public class AlertDTO {
         this.floodSeverity = floodSeverity;
     }
 }
-

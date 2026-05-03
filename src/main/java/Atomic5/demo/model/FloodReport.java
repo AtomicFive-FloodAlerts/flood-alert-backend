@@ -133,4 +133,9 @@ public class FloodReport {
     public void setAreaName(String areaName) {
         this.areaName = areaName;
     }
+
+    public Object getReportedByUserId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getReportedByUserId'");
+    }
 }

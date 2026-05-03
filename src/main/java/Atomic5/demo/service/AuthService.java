@@ -5,7 +5,6 @@ import Atomic5.demo.dto.LoginRequest;
 import Atomic5.demo.dto.RegisterRequest;
 import Atomic5.demo.model.User;
 import Atomic5.demo.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,8 +15,8 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;

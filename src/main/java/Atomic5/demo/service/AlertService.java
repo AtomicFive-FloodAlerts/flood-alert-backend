@@ -27,9 +27,9 @@ public class AlertService {
     private final NotificationService notificationService;
 
     public AlertService(AlertRepository alertRepository,
-                        UserRepository userRepository,
-                        FloodSeverityService floodSeverityService,
-                        NotificationService notificationService) {
+            UserRepository userRepository,
+            FloodSeverityService floodSeverityService,
+            NotificationService notificationService) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
         this.floodSeverityService = floodSeverityService;
@@ -177,7 +177,7 @@ public class AlertService {
         List<Alert> allAlerts = alertRepository.findByRecipientOrderByCreatedAtDesc(user);
         return allAlerts.stream()
                 .filter(alert -> alert.getFloodReport() != null
-                        && alert.getFloodReport().getSeverity().name().equalsIgnoreCase(severity))
+                        && ((FloodReport) alert.getFloodReport()).getSeverity().name().equalsIgnoreCase(severity))
                 .toList();
     }
 

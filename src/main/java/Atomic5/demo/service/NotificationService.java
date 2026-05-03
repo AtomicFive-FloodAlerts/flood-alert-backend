@@ -3,6 +3,7 @@ package Atomic5.demo.service;
 import Atomic5.demo.model.Alert;
 import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.User;
+import Atomic5.demo.repository.FloodReportRepository;
 import Atomic5.demo.service.sms.SmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,6 +14,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Optional;
 
 /**
  * Service for sending notifications to users via email and SMS
@@ -30,6 +32,9 @@ public class NotificationService {
 
     @Autowired(required = false)
     private SmsService smsService;
+
+    @Autowired(required = false)
+    private FloodReportRepository floodReportRepository;
 
     /**
      * Send alert notification via email and SMS
@@ -93,10 +98,14 @@ public class NotificationService {
      * Build HTML email content for alert
      */
     private String buildHtmlEmailContent(Alert alert) {
-        FloodReport report = alert.getFloodReport();
-        if (report == null) {
+        if (alert.getFloodReportId() == null || floodReportRepository == null) {
             return alert.getMessage();
         }
+        Optional<FloodReport> reportOpt = floodReportRepository.findById(alert.getFloodReportId());
+        if (reportOpt.isEmpty()) {
+            return alert.getMessage();
+        }
+        FloodReport report = reportOpt.get();
 
         return String.format(
                 """
@@ -190,10 +199,14 @@ public class NotificationService {
      * Build SMS alert message
      */
     private String buildSmsAlertMessage(Alert alert) {
-        FloodReport report = alert.getFloodReport();
-        if (report == null) {
+        if (alert.getFloodReportId() == null || floodReportRepository == null) {
             return alert.getMessage();
         }
+        Optional<FloodReport> reportOpt = floodReportRepository.findById(alert.getFloodReportId());
+        if (reportOpt.isEmpty()) {
+            return alert.getMessage();
+        }
+        FloodReport report = reportOpt.get();
 
         return String.format(
                 "🚨 FLOOD ALERT: %s in %s (Distance: %.1f km). Water level: %d cm. %s",

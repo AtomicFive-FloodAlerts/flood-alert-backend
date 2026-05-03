@@ -44,6 +44,7 @@ public class FloodReportDTO {
     public void setReportedById(Long reportedById) {
         this.reportedById = reportedById;
     }
+
     public Double getLatitude() {
         return latitude;
     }
