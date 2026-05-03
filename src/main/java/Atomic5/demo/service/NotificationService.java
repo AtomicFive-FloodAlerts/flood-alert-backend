@@ -210,15 +210,24 @@ public class NotificationService {
     }
 
     private FloodReport resolveFloodReport(Alert alert) {
+
         if (alert.getFloodReport() != null) {
             return alert.getFloodReport();
         }
+
         if (alert.getFloodReportId() == null) {
             return null;
         }
-        String floodId = alert.getFloodReportId();
 
-        return floodReportRepository.findById(floodId).orElse(null);
+        try {
+            Long floodId = Long.parseLong(alert.getFloodReportId());
+
+            return floodReportRepository.findById(floodId).orElse(null);
+
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid floodReportId: {}", alert.getFloodReportId());
+            return null;
+        }
     }
 
     /**

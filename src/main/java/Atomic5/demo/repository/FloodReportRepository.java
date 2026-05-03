@@ -10,7 +10,7 @@ import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.FloodSeverity;
 
 @Repository
-public interface FloodReportRepository extends JpaRepository<FloodReport, String> {
+public interface FloodReportRepository extends JpaRepository<FloodReport, Long> {
 
     List<FloodReport> findByExpiryTimeAfterOrderByReportTimeDesc(LocalDateTime now);
 

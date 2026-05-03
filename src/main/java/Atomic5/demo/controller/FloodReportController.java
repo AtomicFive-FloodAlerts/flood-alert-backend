@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Atomic5.demo.dto.FloodReportDTO;
@@ -36,11 +37,13 @@ public class FloodReportController {
     private final FloodSeverityService floodSeverityService;
     private final NotificationService notificationService;
 
-    public FloodReportController(FloodReportRepository floodReportRepository,
-                                 UserRepository userRepository,
-                                 AlertService alertService,
-                                 FloodSeverityService floodSeverityService,
-                                 NotificationService notificationService) {
+    public FloodReportController(
+        FloodReportRepository floodReportRepository,
+        UserRepository userRepository,
+        AlertService alertService,
+        FloodSeverityService floodSeverityService,
+        NotificationService notificationService
+    ) {
         this.floodReportRepository = floodReportRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
@@ -50,6 +53,7 @@ public class FloodReportController {
 
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
+
         try {
             User reporter = userRepository
                     .findById(reportDTO.getReportedById())
@@ -99,8 +103,18 @@ public class FloodReportController {
         return ResponseEntity.ok(floodReportRepository.findAll());
     }
 
+    @GetMapping("/area")
+    public ResponseEntity<List<FloodReport>> getFloodsInArea(
+            @RequestParam Double minLat,
+            @RequestParam Double maxLat,
+            @RequestParam Double minLon,
+            @RequestParam Double maxLon) {
+
+        return ResponseEntity.ok(floodReportRepository.findAll());
+    }
+
     @GetMapping("/{floodId}")
-    public ResponseEntity<FloodReport> getFloodById(@PathVariable String floodId) {
+    public ResponseEntity<FloodReport> getFloodById(@PathVariable Long floodId) {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -122,20 +136,22 @@ public class FloodReportController {
 
             FloodSeverity severity = report.getSeverity();
 
-            switch (severity) {
-                case HIGH:
-                case CRITICAL:
-                    data.put("priority", "HIGH");
-                    break;
-
-                case MODERATE:
-                    data.put("priority", "MEDIUM");
-                    break;
-
-                case LOW:
-                default:
-                    data.put("priority", "LOW");
-                    break;
+            if (severity == null) {
+                data.put("priority", "LOW");
+            } else {
+                switch (severity) {
+                    case HIGH:
+                    case CRITICAL:
+                        data.put("priority", "HIGH");
+                        break;
+                    case MODERATE:
+                        data.put("priority", "MEDIUM");
+                        break;
+                    case LOW:
+                    default:
+                        data.put("priority", "LOW");
+                        break;
+                }
             }
 
             return data;

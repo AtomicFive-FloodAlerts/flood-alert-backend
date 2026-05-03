@@ -209,10 +209,19 @@ public class AlertService {
             if (alert.getFloodReport() != null || alert.getFloodReportId() == null) {
                 continue;
             }
-            String floodId = alert.getFloodReportId();
+            String floodIdStr = alert.getFloodReportId();
 
-            floodReportRepository.findById(floodId)
-                    .ifPresent(alert::setFloodReport);
+            if (floodIdStr != null) {
+                try {
+                    Long floodId = Long.parseLong(floodIdStr);
+
+                    floodReportRepository.findById(floodId)
+                            .ifPresent(alert::setFloodReport);
+
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid floodReportId: {}", floodIdStr);
+                }
+            }
         }
     }
 }
