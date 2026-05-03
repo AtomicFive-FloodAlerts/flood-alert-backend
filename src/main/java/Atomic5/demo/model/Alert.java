@@ -6,13 +6,12 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "alerts")
 public class Alert {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "flood_report_id")
-    private FloodReport floodReport;
+    private String floodReportId;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -26,15 +25,14 @@ public class Alert {
 
     private LocalDateTime createdAt;
     private LocalDateTime readAt;
-
-    private Double distanceKm; // Distance from user to flood location
+    private Double distanceKm;
 
     public Alert() {
     }
 
-    public Alert(FloodReport floodReport, User recipient, String title, String message,
+    public Alert(String floodReportId, User recipient, String title, String message,
             AlertStatus status, LocalDateTime createdAt, LocalDateTime readAt, Double distanceKm) {
-        this.floodReport = floodReport;
+        this.floodReportId = floodReportId;
         this.recipient = recipient;
         this.title = title;
         this.message = message;
@@ -44,10 +42,10 @@ public class Alert {
         this.distanceKm = distanceKm;
     }
 
-    public Alert(Long id, FloodReport floodReport, User recipient, String title, String message,
+    public Alert(Long id, String floodReportId, User recipient, String title, String message,
             AlertStatus status, LocalDateTime createdAt, LocalDateTime readAt, Double distanceKm) {
         this.id = id;
-        this.floodReport = floodReport;
+        this.floodReportId = floodReportId;
         this.recipient = recipient;
         this.title = title;
         this.message = message;
@@ -76,12 +74,12 @@ public class Alert {
         this.id = id;
     }
 
-    public FloodReport getFloodReport() {
-        return floodReport;
+    public String getFloodReportId() {
+        return floodReportId;
     }
 
-    public void setFloodReport(FloodReport floodReport) {
-        this.floodReport = floodReport;
+    public void setFloodReportId(String floodReportId) {
+        this.floodReportId = floodReportId;
     }
 
     public User getRecipient() {

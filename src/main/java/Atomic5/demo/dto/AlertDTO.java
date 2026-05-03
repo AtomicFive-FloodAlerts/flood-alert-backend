@@ -2,7 +2,7 @@ package Atomic5.demo.dto;
 
 public class AlertDTO {
     private Long id;
-    private Long floodReportId;
+    private String floodReportId;
     private Long recipientId;
     private String title;
     private String message;
@@ -16,7 +16,7 @@ public class AlertDTO {
     public AlertDTO() {
     }
 
-    public AlertDTO(Long id, Long floodReportId, Long recipientId, String title, String message,
+    public AlertDTO(Long id, String floodReportId, Long recipientId, String title, String message,
             String status, String createdAt, String readAt, Double distanceKm, String areaName, String floodSeverity) {
         this.id = id;
         this.floodReportId = floodReportId;
@@ -40,11 +40,11 @@ public class AlertDTO {
         this.id = id;
     }
 
-    public Long getFloodReportId() {
+    public String getFloodReportId() {
         return floodReportId;
     }
 
-    public void setFloodReportId(Long floodReportId) {
+    public void setFloodReportId(String floodReportId) {
         this.floodReportId = floodReportId;
     }
 

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "flood_reports")
 public class FloodReport {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -13,18 +14,13 @@ public class FloodReport {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User reportedBy;
-
     private Double latitude;
     private Double longitude;
     private String description;
-
-    @Enumerated(EnumType.STRING)
     private FloodSeverity severity;
-
     private LocalDateTime reportTime;
     private LocalDateTime expiryTime;
-
-    private Integer waterLevel; // in cm
+    private Integer waterLevel;
     private String areaName;
 
     public FloodReport() {
@@ -39,7 +35,7 @@ public class FloodReport {
         this.waterLevel = waterLevel;
         this.areaName = areaName;
         this.reportTime = LocalDateTime.now();
-        this.expiryTime = LocalDateTime.now().plusHours(6); // Expires after 6 hours
+        this.expiryTime = LocalDateTime.now().plusHours(6);
     }
 
     public FloodReport(Long id, User reportedBy, Double latitude, Double longitude,
@@ -138,4 +134,3 @@ public class FloodReport {
         this.areaName = areaName;
     }
 }
-

@@ -5,18 +5,23 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-    private String email;
-    private String phoneNumber;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String phoneNumber;
     private Double latitude;
     private Double longitude;
-
     private Boolean notificationsEnabled;
+
+    @Column(nullable = false)
+    private String passwordHash;
 
     public User() {
     }
@@ -29,7 +34,7 @@ public class User {
         this.notificationsEnabled = true;
     }
 
-    public User(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude, Boolean notificationsEnabled) {
+    public User(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude, Boolean notificationsEnabled, String passwordHash) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -37,6 +42,7 @@ public class User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.notificationsEnabled = notificationsEnabled;
+        this.passwordHash = passwordHash;
     }
 
     // Getters and Setters
@@ -94,6 +100,14 @@ public class User {
 
     public void setNotificationsEnabled(Boolean notificationsEnabled) {
         this.notificationsEnabled = notificationsEnabled;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
 

@@ -1,15 +1,16 @@
 package Atomic5.demo.dto;
 
 public class FloodReportDTO {
-    private Long id;
-    private Long reportedById;
+
     private Double latitude;
     private Double longitude;
     private String description;
-    private String severity;
     private Integer waterLevel;
     private String areaName;
     private String reportTime;
+    private Long id;
+    private Long reportedById;
+    private String severity;
 
     public FloodReportDTO() {
     }
@@ -43,7 +44,6 @@ public class FloodReportDTO {
     public void setReportedById(Long reportedById) {
         this.reportedById = reportedById;
     }
-
     public Double getLatitude() {
         return latitude;
     }
@@ -100,4 +100,3 @@ public class FloodReportDTO {
         this.reportTime = reportTime;
     }
 }
-

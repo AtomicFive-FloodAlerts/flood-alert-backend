@@ -17,7 +17,6 @@ public class UserDTO {
         this.email = email;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.notificationsEnabled = true;
     }
 
     public UserDTO(Long id, String name, String email, String phoneNumber, Double latitude, Double longitude, Boolean notificationsEnabled) {
@@ -87,4 +86,3 @@ public class UserDTO {
         this.notificationsEnabled = notificationsEnabled;
     }
 }
-
