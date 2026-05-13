@@ -2,13 +2,22 @@ package Atomic5.demo.dto;
 
 public class FloodReportDTO {
 
+    private Long reportedById;
+
     private Double latitude;
     private Double longitude;
     private String description;
     private Integer waterLevel;
     private String areaName;
 
-    public FloodReportDTO() {
+    public FloodReportDTO() {}
+
+    public Long getReportedById() {
+        return reportedById;
+    }
+
+    public void setReportedById(Long reportedById) {
+        this.reportedById = reportedById;
     }
 
     public Double getLatitude() {
