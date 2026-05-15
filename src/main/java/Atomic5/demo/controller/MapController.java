@@ -1,58 +1,51 @@
 package Atomic5.demo.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import Atomic5.demo.dto.MapDTO;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import org.springframework.web.bind.annotation.RequestParam;
-
+import Atomic5.demo.model.MapSpot;
+import Atomic5.demo.repository.MapRepository;
 
 @RestController
 @RequestMapping("/api/maps")
 @CrossOrigin(origins = "*")
 public class MapController {
-        @GetMapping()
-        public ResponseEntity<List<MapDTO>> getMapSpots() {
-        List<MapDTO> spots = List.of(
-                new MapDTO(
-                        1L,
-                        "Colombo Fort",
-                        "Severe flooding near Colombo Fort",
-                        6.9271,
-                        79.8612,
-                        "HIGH"
-                ),
-                new MapDTO(
-                        2L,
-                        "Pettah",
-                        "Water rising in Pettah area",
-                        6.9100,
-                        79.8700,
-                        "MEDIUM"
-                ),
-                new MapDTO(
-                        3L,
-                        "Galle Face",
-                        "Minor flooding reported at Galle Face",
-                        6.568545,
-                        80.826024,
-                        "MEDIUM"
-                )
-        );
+
+    private final MapRepository mapRepository;
+
+    public MapController(MapRepository mapRepository) {
+        this.mapRepository = mapRepository;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<MapDTO>> getMapSpots() {
+
+        List<MapDTO> spots = mapRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(spots);
-        }
-      @GetMapping("map:stat")
-      public String getMethodName() {
-          return new String("Map statistics: 3 flood spots reported");
-      }
-      
+    }
 
+    private MapDTO convertToDTO(MapSpot spot) {
+        return new MapDTO(
+                spot.getId(),
+                spot.getTitle(),
+                spot.getDescription(),
+                spot.getLatitude(),
+                spot.getLongitude(),
+                spot.getSeverity()
+        );
+    }
+
+    @GetMapping("/map-stat")
+    public String getMapStatistics() {
+        long count = mapRepository.count();
+        return "Map statistics: " + count + " flood spots reported";
+    }
 }
