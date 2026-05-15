@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import Atomic5.demo.dto.MapDTO;
-
-import java.util.List;
+import Atomic5.demo.model.MapSpot;
+import Atomic5.demo.repository.MapRepository;
 
 @RestController
 @RequestMapping("/api/maps")
