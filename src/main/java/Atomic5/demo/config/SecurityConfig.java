@@ -34,18 +34,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/auth/**",
-                    "/api/floods/**",
-                    "/oauth2/**",
-                    "/login/**"
+                    "/api/floods/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
 
-            .oauth2Login(oauth -> oauth
-                .defaultSuccessUrl("/api/auth/oauth-success", true)
-            )
-
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtFilter,
+                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

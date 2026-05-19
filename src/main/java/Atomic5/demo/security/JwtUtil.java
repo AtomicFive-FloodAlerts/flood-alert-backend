@@ -1,14 +1,14 @@
 package Atomic5.demo.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
+import java.util.Date;
+
 import javax.crypto.SecretKey;
 
-import java.security.Key;
-import java.util.Date;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -32,7 +32,7 @@ public class JwtUtil {
         return extractAllClaims(token).getSubject();
     }
 
-    // Extract all claims (FIXED for jjwt 0.12+)
+    // Extract all claims
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -43,11 +43,19 @@ public class JwtUtil {
 
     // Check expiration
     private boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+        return extractAllClaims(token)
+                .getExpiration()
+                .before(new Date());
     }
 
     // Validate token
     public boolean validateToken(String token) {
-        return !isTokenExpired(token);
+
+        try {
+            return !isTokenExpired(token);
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
