@@ -1,7 +1,6 @@
 package Atomic5.demo.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,33 +11,42 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String floodReportId;
+    @ManyToOne
+    @JoinColumn(name = "flood_report_id")
+    private FloodReport floodReport;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User recipient;
 
     private String title;
+
     private String message;
 
     @Enumerated(EnumType.STRING)
     private AlertStatus status;
 
     private LocalDateTime createdAt;
-    private LocalDateTime readAt;
-    private Double distanceKm;
 
-    @Transient
-    private FloodReport floodReport;
+    private LocalDateTime readAt;
+
+    private Double distanceKm;
 
     public Alert() {
     }
 
-    public Alert(Long id, String floodReportId, User recipient, String title, String message,
-                 AlertStatus status, LocalDateTime createdAt, LocalDateTime readAt,
+    public Alert(Long id,
+                 FloodReport floodReport,
+                 User recipient,
+                 String title,
+                 String message,
+                 AlertStatus status,
+                 LocalDateTime createdAt,
+                 LocalDateTime readAt,
                  Double distanceKm) {
+
         this.id = id;
-        this.floodReportId = floodReportId;
+        this.floodReport = floodReport;
         this.recipient = recipient;
         this.title = title;
         this.message = message;
@@ -50,9 +58,11 @@ public class Alert {
 
     @PrePersist
     protected void onCreate() {
+
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+
         if (status == null) {
             status = AlertStatus.UNREAD;
         }
@@ -66,12 +76,12 @@ public class Alert {
         this.id = id;
     }
 
-    public String getFloodReportId() {
-        return floodReportId;
+    public FloodReport getFloodReport() {
+        return floodReport;
     }
 
-    public void setFloodReportId(String floodReportId) {
-        this.floodReportId = floodReportId;
+    public void setFloodReport(FloodReport floodReport) {
+        this.floodReport = floodReport;
     }
 
     public User getRecipient() {
@@ -128,13 +138,5 @@ public class Alert {
 
     public void setDistanceKm(Double distanceKm) {
         this.distanceKm = distanceKm;
-    }
-
-    public FloodReport getFloodReport() {
-        return floodReport;
-    }
-
-    public void setFloodReport(FloodReport floodReport) {
-        this.floodReport = floodReport;
     }
 }

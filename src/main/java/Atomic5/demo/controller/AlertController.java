@@ -3,6 +3,7 @@ package Atomic5.demo.controller;
 import Atomic5.demo.dto.AlertDTO;
 import Atomic5.demo.model.Alert;
 import Atomic5.demo.service.AlertService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,97 +19,131 @@ public class AlertController {
 
     public AlertController(AlertService alertService) {
         this.alertService = alertService;
-        System.out.println("AlertController initialized");
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<AlertDTO>> getAlertsForUser(@PathVariable Long userId) {
-        List<Alert> alerts = alertService.getAlertsForUser(userId);
-        List<AlertDTO> alertDTOs = alerts.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<AlertDTO>> getAlertsForUser(
+            @PathVariable Long userId
+    ) {
+
+        List<Alert> alerts =
+                alertService.getAlertsForUser(userId);
+
+        List<AlertDTO> alertDTOs =
+                alerts.stream()
+                        .map(this::convertToDTO)
+                        .collect(Collectors.toList());
+
         return ResponseEntity.ok(alertDTOs);
     }
 
     @GetMapping("/user/{userId}/unread-count")
-    public ResponseEntity<Long> getUnreadAlertCount(@PathVariable Long userId) {
-        long count = alertService.getUnreadAlertCount(userId);
+    public ResponseEntity<Long> getUnreadAlertCount(
+            @PathVariable Long userId
+    ) {
+
+        long count =
+                alertService.getUnreadAlertCount(userId);
+
         return ResponseEntity.ok(count);
     }
 
     @PutMapping("/{alertId}/read")
-    public ResponseEntity<AlertDTO> markAlertAsRead(@PathVariable Long alertId) {
-        Alert alert = alertService.markAsRead(alertId);
+    public ResponseEntity<AlertDTO> markAlertAsRead(
+            @PathVariable Long alertId
+    ) {
+
+        Alert alert =
+                alertService.markAsRead(alertId);
+
         if (alert != null) {
             return ResponseEntity.ok(convertToDTO(alert));
         }
+
         return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{alertId}/dismiss")
-    public ResponseEntity<AlertDTO> dismissAlert(@PathVariable Long alertId) {
-        Alert alert = alertService.dismissAlert(alertId);
+    public ResponseEntity<AlertDTO> dismissAlert(
+            @PathVariable Long alertId
+    ) {
+
+        Alert alert =
+                alertService.dismissAlert(alertId);
+
         if (alert != null) {
             return ResponseEntity.ok(convertToDTO(alert));
         }
+
         return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{alertId}")
-    public ResponseEntity<Void> deleteAlert(@PathVariable Long alertId) {
-        boolean deleted = alertService.deleteAlert(alertId);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-    }
+    public ResponseEntity<Void> deleteAlert(
+            @PathVariable Long alertId
+    ) {
 
-    /**
-     * Acknowledge an alert
-     */
-    @PutMapping("/{alertId}/acknowledge")
-    public ResponseEntity<AlertDTO> acknowledgeAlert(@PathVariable Long alertId) {
-        Alert alert = alertService.acknowledgeAlert(alertId);
-        if (alert != null) {
-            return ResponseEntity.ok(convertToDTO(alert));
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Get alerts by severity level
-     */
-    @GetMapping("/user/{userId}/severity/{severity}")
-    public ResponseEntity<List<AlertDTO>> getAlertsBySeverity(
-            @PathVariable Long userId,
-            @PathVariable String severity) {
-        List<Alert> alerts = alertService.getAlertsBySeverity(userId, severity);
-        List<AlertDTO> alertDTOs = alerts.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(alertDTOs);
-    }
-
-    /**
-     * Get active alerts (unread or acknowledged)
-     */
-    @GetMapping("/user/{userId}/active")
-    public ResponseEntity<List<AlertDTO>> getActiveAlerts(@PathVariable Long userId) {
-        List<Alert> alerts = alertService.getActiveAlerts(userId);
-        List<AlertDTO> alertDTOs = alerts.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(alertDTOs);
+        return ResponseEntity.noContent().build();
     }
 
     private AlertDTO convertToDTO(Alert alert) {
+
         AlertDTO dto = new AlertDTO();
+
         dto.setId(alert.getId());
-        dto.setFloodReportId(alert.getFloodReportId());
-        dto.setRecipientId(alert.getRecipient() != null ? alert.getRecipient().getId() : null);
+
+        dto.setFloodReportId(
+                alert.getFloodReport() != null
+                        ? alert.getFloodReport().getId()
+                        : null
+        );
+
+        dto.setRecipientId(
+                alert.getRecipient() != null
+                        ? alert.getRecipient().getId()
+                        : null
+        );
+
         dto.setTitle(alert.getTitle());
+
         dto.setMessage(alert.getMessage());
-        dto.setStatus(alert.getStatus().name());
-        dto.setCreatedAt(alert.getCreatedAt() != null ? alert.getCreatedAt().toString() : null);
-        dto.setReadAt(alert.getReadAt() != null ? alert.getReadAt().toString() : null);
+
+        dto.setStatus(
+                alert.getStatus() != null
+                        ? alert.getStatus().name()
+                        : null
+        );
+
+        dto.setCreatedAt(
+                alert.getCreatedAt() != null
+                        ? alert.getCreatedAt().toString()
+                        : null
+        );
+
+        dto.setReadAt(
+                alert.getReadAt() != null
+                        ? alert.getReadAt().toString()
+                        : null
+        );
+
         dto.setDistanceKm(alert.getDistanceKm());
+
+        if (alert.getFloodReport() != null) {
+
+            if (alert.getFloodReport().getAreaName() != null) {
+                dto.setAreaName(
+                        alert.getFloodReport().getAreaName()
+                );
+            }
+
+            if (alert.getFloodReport().getSeverity() != null) {
+                dto.setFloodSeverity(
+                        alert.getFloodReport()
+                                .getSeverity()
+                                .name()
+                );
+            }
+        }
 
         return dto;
     }
