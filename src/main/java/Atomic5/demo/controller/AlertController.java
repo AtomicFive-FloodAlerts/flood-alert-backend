@@ -15,136 +15,125 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class AlertController {
 
-    private final AlertService alertService;
+        private final AlertService alertService;
 
-    public AlertController(AlertService alertService) {
-        this.alertService = alertService;
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<AlertDTO>> getAlertsForUser(
-            @PathVariable Long userId
-    ) {
-
-        List<Alert> alerts =
-                alertService.getAlertsForUser(userId);
-
-        List<AlertDTO> alertDTOs =
-                alerts.stream()
-                        .map(this::convertToDTO)
-                        .collect(Collectors.toList());
-
-        return ResponseEntity.ok(alertDTOs);
-    }
-
-    @GetMapping("/user/{userId}/unread-count")
-    public ResponseEntity<Long> getUnreadAlertCount(
-            @PathVariable Long userId
-    ) {
-
-        long count =
-                alertService.getUnreadAlertCount(userId);
-
-        return ResponseEntity.ok(count);
-    }
-
-    @PutMapping("/{alertId}/read")
-    public ResponseEntity<AlertDTO> markAlertAsRead(
-            @PathVariable Long alertId
-    ) {
-
-        Alert alert =
-                alertService.markAsRead(alertId);
-
-        if (alert != null) {
-            return ResponseEntity.ok(convertToDTO(alert));
+        public AlertController(AlertService alertService) {
+                this.alertService = alertService;
         }
 
-        return ResponseEntity.notFound().build();
-    }
+        @GetMapping("/user/{userId}")
+        public ResponseEntity<List<AlertDTO>> getAlertsForUser(
+                        @PathVariable Long userId) {
 
-    @PutMapping("/{alertId}/dismiss")
-    public ResponseEntity<AlertDTO> dismissAlert(
-            @PathVariable Long alertId
-    ) {
+                List<Alert> alerts = alertService.getAlertsForUser(userId);
 
-        Alert alert =
-                alertService.dismissAlert(alertId);
+                List<AlertDTO> alertDTOs = alerts.stream()
+                                .map(this::convertToDTO)
+                                .collect(Collectors.toList());
 
-        if (alert != null) {
-            return ResponseEntity.ok(convertToDTO(alert));
+                return ResponseEntity.ok(alertDTOs);
         }
 
-        return ResponseEntity.notFound().build();
-    }
+        @GetMapping("/user/{userId}/unread-count")
+        public ResponseEntity<Long> getUnreadAlertCount(
+                        @PathVariable Long userId) {
 
-    @DeleteMapping("/{alertId}")
-    public ResponseEntity<Void> deleteAlert(
-            @PathVariable Long alertId
-    ) {
+                long count = alertService.getUnreadAlertCount(userId);
 
-        return ResponseEntity.noContent().build();
-    }
-
-    private AlertDTO convertToDTO(Alert alert) {
-
-        AlertDTO dto = new AlertDTO();
-
-        dto.setId(alert.getId());
-
-        dto.setFloodReportId(
-                alert.getFloodReport() != null
-                        ? alert.getFloodReport().getId()
-                        : null
-        );
-
-        dto.setRecipientId(
-                alert.getRecipient() != null
-                        ? alert.getRecipient().getId()
-                        : null
-        );
-
-        dto.setTitle(alert.getTitle());
-
-        dto.setMessage(alert.getMessage());
-
-        dto.setStatus(
-                alert.getStatus() != null
-                        ? alert.getStatus().name()
-                        : null
-        );
-
-        dto.setCreatedAt(
-                alert.getCreatedAt() != null
-                        ? alert.getCreatedAt().toString()
-                        : null
-        );
-
-        dto.setReadAt(
-                alert.getReadAt() != null
-                        ? alert.getReadAt().toString()
-                        : null
-        );
-
-        dto.setDistanceKm(alert.getDistanceKm());
-
-        if (alert.getFloodReport() != null) {
-
-            if (alert.getFloodReport().getAreaName() != null) {
-                dto.setAreaName(
-                        alert.getFloodReport().getAreaName()
-                );
-            }
-
-            if (alert.getFloodReport().getSeverity() != null) {
-                dto.setFloodSeverity(
-                        alert.getFloodReport()
-                                .getSeverity()
-                                .name()
-                );
-            }
+                return ResponseEntity.ok(count);
         }
 
-        return dto;
-    }
+        @PutMapping("/{alertId}/read")
+        public ResponseEntity<AlertDTO> markAlertAsRead(
+                        @PathVariable Long alertId) {
+
+                Alert alert = alertService.markAsRead(alertId);
+
+                if (alert != null) {
+                        return ResponseEntity.ok(convertToDTO(alert));
+                }
+
+                return ResponseEntity.notFound().build();
+        }
+
+        @PutMapping("/{alertId}/dismiss")
+        public ResponseEntity<AlertDTO> dismissAlert(
+                        @PathVariable Long alertId) {
+
+                Alert alert = alertService.dismissAlert(alertId);
+
+                if (alert != null) {
+                        return ResponseEntity.ok(convertToDTO(alert));
+                }
+
+                return ResponseEntity.notFound().build();
+        }
+
+        @DeleteMapping("/{alertId}")
+        public ResponseEntity<Void> deleteAlert(
+                        @PathVariable Long alertId) {
+
+                boolean deleted = alertService.deleteAlert(alertId);
+
+                if (deleted) {
+                        return ResponseEntity.noContent().build();
+                }
+
+                return ResponseEntity.notFound().build();
+        }
+
+        private AlertDTO convertToDTO(Alert alert) {
+
+                AlertDTO dto = new AlertDTO();
+
+                dto.setId(alert.getId());
+
+                dto.setFloodReportId(
+                                alert.getFloodReport() != null
+                                                ? alert.getFloodReport().getId()
+                                                : null);
+
+                dto.setRecipientId(
+                                alert.getRecipient() != null
+                                                ? alert.getRecipient().getId()
+                                                : null);
+
+                dto.setTitle(alert.getTitle());
+
+                dto.setMessage(alert.getMessage());
+
+                dto.setStatus(
+                                alert.getStatus() != null
+                                                ? alert.getStatus().name()
+                                                : null);
+
+                dto.setCreatedAt(
+                                alert.getCreatedAt() != null
+                                                ? alert.getCreatedAt().toString()
+                                                : null);
+
+                dto.setReadAt(
+                                alert.getReadAt() != null
+                                                ? alert.getReadAt().toString()
+                                                : null);
+
+                dto.setDistanceKm(alert.getDistanceKm());
+
+                if (alert.getFloodReport() != null) {
+
+                        if (alert.getFloodReport().getAreaName() != null) {
+                                dto.setAreaName(
+                                                alert.getFloodReport().getAreaName());
+                        }
+
+                        if (alert.getFloodReport().getSeverity() != null) {
+                                dto.setFloodSeverity(
+                                                alert.getFloodReport()
+                                                                .getSeverity()
+                                                                .name());
+                        }
+                }
+
+                return dto;
+        }
 }

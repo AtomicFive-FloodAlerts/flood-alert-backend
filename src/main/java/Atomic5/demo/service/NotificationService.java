@@ -18,8 +18,7 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class NotificationService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(NotificationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Autowired(required = false)
     private JavaMailSender mailSender;
@@ -32,7 +31,15 @@ public class NotificationService {
         sendAlertSms(alert, recipient);
     }
 
-    private void sendAlertEmail(Alert alert, User recipient) {
+    public boolean isEmailConfigured() {
+        return mailSender != null;
+    }
+
+    public boolean isSmsConfigured() {
+        return smsService != null && smsService.isAnySmsProviderConfigured();
+    }
+
+    public void sendAlertEmail(Alert alert, User recipient) {
 
         if (mailSender == null) {
             logger.warn("Email service not configured.");
@@ -43,8 +50,7 @@ public class NotificationService {
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             helper.setTo(recipient.getEmail());
             helper.setSubject("🚨 " + alert.getTitle());
@@ -54,20 +60,18 @@ public class NotificationService {
 
             logger.info(
                     "Alert notification email sent to {}",
-                    recipient.getEmail()
-            );
+                    recipient.getEmail());
 
         } catch (MessagingException e) {
 
             logger.error(
                     "Failed to send alert email to {}: {}",
                     recipient.getEmail(),
-                    e.getMessage()
-            );
+                    e.getMessage());
         }
     }
 
-    private void sendAlertSms(Alert alert, User recipient) {
+    public void sendAlertSms(Alert alert, User recipient) {
 
         if (smsService == null ||
                 !smsService.isAnySmsProviderConfigured()) {
@@ -81,8 +85,7 @@ public class NotificationService {
 
             logger.warn(
                     "User {} has no phone number",
-                    recipient.getId()
-            );
+                    recipient.getId());
 
             return;
         }
@@ -97,15 +100,13 @@ public class NotificationService {
 
                 logger.info(
                         "Alert SMS sent to {}",
-                        recipient.getPhoneNumber()
-                );
+                        recipient.getPhoneNumber());
 
             } else {
 
                 logger.warn(
                         "Failed to send alert SMS to {}",
-                        recipient.getPhoneNumber()
-                );
+                        recipient.getPhoneNumber());
             }
 
         } catch (Exception e) {
@@ -113,8 +114,7 @@ public class NotificationService {
             logger.error(
                     "Error sending SMS to {}: {}",
                     recipient.getPhoneNumber(),
-                    e.getMessage()
-            );
+                    e.getMessage());
         }
     }
 
@@ -126,41 +126,45 @@ public class NotificationService {
             return alert.getMessage();
         }
 
+        Integer waterLevel = report.getWaterLevel();
+        String waterLevelText = waterLevel != null ? waterLevel + " cm" : "N/A";
+        String descriptionText = report.getDescription() != null ? report.getDescription() : "No description provided";
+        String reportTimeText = report.getReportTime() != null ? report.getReportTime().toString() : "N/A";
+
         return String.format(
                 """
-                <!DOCTYPE html>
-                <html>
-                <body style="font-family: Arial, sans-serif;">
-                    <h2>🚨 Flood Alert</h2>
+                        <!DOCTYPE html>
+                        <html>
+                        <body style="font-family: Arial, sans-serif;">
+                            <h2>🚨 Flood Alert</h2>
 
-                    <p><strong>Message:</strong> %s</p>
+                            <p><strong>Message:</strong> %s</p>
 
-                    <p><strong>Severity:</strong> %s</p>
+                            <p><strong>Severity:</strong> %s</p>
 
-                    <p><strong>Location:</strong> %s</p>
+                            <p><strong>Location:</strong> %s</p>
 
-                    <p><strong>Distance:</strong> %.2f km</p>
+                            <p><strong>Distance:</strong> %.2f km</p>
 
-                    <p><strong>Water Level:</strong> %d cm</p>
+                            <p><strong>Water Level:</strong> %s</p>
 
-                    <p><strong>Description:</strong> %s</p>
+                            <p><strong>Description:</strong> %s</p>
 
-                    <p><strong>Reported Time:</strong> %s</p>
+                            <p><strong>Reported Time:</strong> %s</p>
 
-                    <hr>
+                            <hr>
 
-                    <p>Stay safe.</p>
-                </body>
-                </html>
-                """,
+                            <p>Stay safe.</p>
+                        </body>
+                        </html>
+                        """,
                 alert.getMessage(),
                 report.getSeverity(),
                 report.getAreaName(),
                 alert.getDistanceKm(),
-                report.getWaterLevel(),
-                report.getDescription(),
-                report.getReportTime()
-        );
+                waterLevelText,
+                descriptionText,
+                reportTimeText);
     }
 
     private String buildSmsAlertMessage(Alert alert) {
@@ -171,13 +175,16 @@ public class NotificationService {
             return alert.getMessage();
         }
 
+        String waterLevelText = report.getWaterLevel() != null
+                ? report.getWaterLevel() + " cm"
+                : "unknown level";
+
         return String.format(
-                "🚨 FLOOD ALERT: %s in %s (%.1f km away). Water level: %d cm.",
+                "🚨 FLOOD ALERT: %s in %s (%.1f km away). Water level: %s.",
                 report.getSeverity(),
                 report.getAreaName(),
                 alert.getDistanceKm(),
-                report.getWaterLevel()
-        );
+                waterLevelText);
     }
 
     private FloodReport resolveFloodReport(Alert alert) {
@@ -191,8 +198,7 @@ public class NotificationService {
 
     public void sendFloodReportConfirmation(
             FloodReport report,
-            User reporter
-    ) {
+            User reporter) {
 
         sendFloodReportConfirmationEmail(report, reporter);
 
@@ -201,8 +207,7 @@ public class NotificationService {
 
     private void sendFloodReportConfirmationEmail(
             FloodReport report,
-            User reporter
-    ) {
+            User reporter) {
 
         if (mailSender == null) {
 
@@ -213,57 +218,50 @@ public class NotificationService {
 
         try {
 
-            SimpleMailMessage message =
-                    new SimpleMailMessage();
+            SimpleMailMessage message = new SimpleMailMessage();
 
             message.setTo(reporter.getEmail());
 
             message.setSubject(
-                    "Flood Report Submitted - Confirmation"
-            );
+                    "Flood Report Submitted - Confirmation");
 
             message.setText(
                     String.format(
                             """
-                            Dear %s,
+                                    Dear %s,
 
-                            Thank you for reporting the flood incident.
+                                    Thank you for reporting the flood incident.
 
-                            Area: %s
-                            Water Level: %d cm
-                            Severity: %s
+                                    Area: %s
+                                    Water Level: %d cm
+                                    Severity: %s
 
-                            Stay safe.
+                                    Stay safe.
 
-                            Flood Alert System
-                            """,
+                                    Flood Alert System
+                                    """,
                             reporter.getName(),
                             report.getAreaName(),
                             report.getWaterLevel(),
-                            report.getSeverity()
-                    )
-            );
+                            report.getSeverity()));
 
             mailSender.send(message);
 
             logger.info(
                     "Confirmation email sent to {}",
-                    reporter.getEmail()
-            );
+                    reporter.getEmail());
 
         } catch (Exception e) {
 
             logger.error(
                     "Failed to send confirmation email: {}",
-                    e.getMessage()
-            );
+                    e.getMessage());
         }
     }
 
     private void sendFloodReportConfirmationSms(
             FloodReport report,
-            User reporter
-    ) {
+            User reporter) {
 
         if (smsService == null ||
                 !smsService.isAnySmsProviderConfigured()) {
@@ -284,20 +282,17 @@ public class NotificationService {
             String smsMessage = String.format(
                     "Flood report received for %s. Water level: %d cm.",
                     report.getAreaName(),
-                    report.getWaterLevel()
-            );
+                    report.getWaterLevel());
 
             smsService.sendSms(
                     reporter.getPhoneNumber(),
-                    smsMessage
-            );
+                    smsMessage);
 
         } catch (Exception e) {
 
             logger.error(
                     "Failed to send confirmation SMS: {}",
-                    e.getMessage()
-            );
+                    e.getMessage());
         }
     }
 }

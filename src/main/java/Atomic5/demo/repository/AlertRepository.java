@@ -1,6 +1,7 @@
 package Atomic5.demo.repository;
 
 import Atomic5.demo.model.Alert;
+import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +14,8 @@ import java.util.List;
 public interface AlertRepository extends JpaRepository<Alert, Long> {
 
     List<Alert> findByRecipientOrderByCreatedAtDesc(User recipient);
+
+    boolean existsByRecipientAndFloodReport(User recipient, FloodReport floodReport);
 
     @Query("SELECT COUNT(a) FROM Alert a WHERE a.recipient = :user AND a.status = 'UNREAD'")
     long countUnreadAlerts(@Param("user") User user);

@@ -6,6 +6,7 @@ import Atomic5.demo.model.FloodReport;
 import Atomic5.demo.model.User;
 import Atomic5.demo.repository.AlertRepository;
 import Atomic5.demo.repository.UserRepository;
+import Atomic5.demo.observer.AlertNotificationSubject;
 import Atomic5.demo.util.LocationUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +24,14 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
     private final FloodSeverityService floodSeverityService;
+    private final AlertNotificationSubject alertNotificationSubject;
 
     public AlertService(AlertRepository alertRepository, UserRepository userRepository,
-            FloodSeverityService floodSeverityService) {
+            FloodSeverityService floodSeverityService, AlertNotificationSubject alertNotificationSubject) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
         this.floodSeverityService = floodSeverityService;
+        this.alertNotificationSubject = alertNotificationSubject;
     }
 
     /**
@@ -37,6 +40,15 @@ public class AlertService {
     @Transactional
     public List<Alert> generateAlertsForFloodReport(FloodReport floodReport) {
         List<Alert> generatedAlerts = new ArrayList<>();
+
+        if (floodReport == null || floodReport.getReportedBy() == null) {
+            return generatedAlerts;
+        }
+
+        if (floodReport.getLatitude() == null || floodReport.getLongitude() == null ||
+                floodReport.getSeverity() == null) {
+            return generatedAlerts;
+        }
 
         // Get alert radius based on flood severity
         double alertRadiusKm = floodSeverityService.getAlertRadiusKm(floodReport.getSeverity());
@@ -47,14 +59,23 @@ public class AlertService {
         for (User user : allUsers) {
             // Skip if user is the reporter or disabled notifications
             if (user.getId().equals(floodReport.getReportedBy().getId()) ||
-                    !user.getNotificationsEnabled()) {
+                    !Boolean.TRUE.equals(user.getNotificationsEnabled())) {
                 continue;
             }
 
             // Check if user is within alert radius
             if (isUserInAlertRadius(user, floodReport, alertRadiusKm)) {
+                if (alertRepository.existsByRecipientAndFloodReport(user, floodReport)) {
+                    continue;
+                }
+
                 Alert alert = createAlert(user, floodReport, alertRadiusKm);
-                generatedAlerts.add(alertRepository.save(alert));
+                Alert savedAlert = alertRepository.save(alert);
+                generatedAlerts.add(savedAlert);
+
+                if (alertNotificationSubject != null) {
+                    alertNotificationSubject.notifyObservers(savedAlert, user);
+                }
             }
         }
 
@@ -147,5 +168,18 @@ public class AlertService {
             return alertRepository.save(alert);
         }
         return alert;
+    }
+
+    /**
+     * Delete an alert
+     */
+    @Transactional
+    public boolean deleteAlert(Long alertId) {
+        if (!alertRepository.existsById(alertId)) {
+            return false;
+        }
+
+        alertRepository.deleteById(alertId);
+        return true;
     }
 }
