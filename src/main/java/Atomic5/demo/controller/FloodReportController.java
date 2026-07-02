@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/floods")
@@ -40,12 +42,15 @@ public class FloodReportController {
      */
     @PostMapping("/report")
     public ResponseEntity<?> reportFlood(@RequestBody FloodReportDTO reportDTO) {
+
+         System.out.println("===== REPORT ENDPOINT HIT =====");
         try {
             // Get the reporting user
-            User reporter = userRepository.findById(reportDTO.getReportedById()).orElse(null);
+            User reporter = userRepository.findAll().stream().findFirst().orElse(null);
+
             if (reporter == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
+                        .body("No users exist in database");
             }
 
             // Create flood report
@@ -66,11 +71,12 @@ public class FloodReportController {
             FloodReport savedReport = floodReportRepository.save(report);
 
             // Generate alerts for nearby users
-            alertService.generateAlertsForFloodReport(savedReport);
+            //alertService.generateAlertsForFloodReport(savedReport);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Flood report created and alerts generated");
         } catch (Exception e) {
+            e.printStackTrace(); 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error creating flood report: " + e.getMessage());
         }
@@ -104,5 +110,37 @@ public class FloodReportController {
         return floodReportRepository.findById(floodId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/map")
+    public ResponseEntity<List<Map<String, Object>>> getMapData() {
+
+        List<FloodReport> reports = floodReportRepository.findAll();
+
+        List<Map<String, Object>> result = reports.stream().map(report -> {
+
+            Map<String, Object> data = new HashMap<>();
+
+            data.put("id", report.getId());
+            data.put("name", report.getAreaName());
+            data.put("description", report.getDescription());
+            data.put("latitude", report.getLatitude());
+            data.put("longitude", report.getLongitude());
+
+            FloodSeverity severity = report.getSeverity();
+
+            if (severity == FloodSeverity.HIGH || severity == FloodSeverity.CRITICAL) {
+                data.put("priority", "HIGH");
+            } else if (severity == FloodSeverity.MODERATE) {
+                data.put("priority", "MEDIUM");
+            } else {
+                data.put("priority", "LOW");
+            }
+
+            return data;
+
+        }).toList();
+
+        return ResponseEntity.ok(result);
     }
 }
